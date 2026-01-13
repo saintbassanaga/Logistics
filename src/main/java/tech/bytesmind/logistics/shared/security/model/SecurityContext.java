@@ -4,15 +4,36 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Security Context enrichi extrait du JWT.
- * SOURCE UNIQUE DE VÉRITÉ pour l'identité et les permissions.
- * 
- * Conforme à ADR-003 et ADR-004.
+ * Represents the security context of a user in the system.
+ * This record encapsulates details related to the user's identity,
+ * role, and contextual permissions, enabling secure handling of
+ * multi-tenant and role-based access control.
+ * <p>
+ * Fields:
+ * - `userId`: The unique identifier of the user.
+ * - `actorType`: The type of the actor, specifying whether the user is
+ *   a customer, an agency employee, or a platform administrator.
+ * - `agencyId`: The identifier of the agency to which the user belongs.
+ *   It is null for users of type CUSTOMER or PLATFORM_ADMIN.
+ * - `roles`: A set of roles assigned to the user.
+ * <p>
+ * Responsibilities:
+ * - Facilitates role-based permission checks.
+ * - Determines whether the user belongs to a specific agency.
+ * - Distinguishes a user type for access control and multi-tenancy validation.
+ * <p>
+ * Methods:
+ * - `hasRole(String role)`: Checks if the user has a specific role.
+ * - `isAgencyEmployee()`: Checks if the user is an employee of an agency.
+ * - `isCustomer()`: Checks if the user is a customer.
+ * - `isPlatformAdmin()`: Checks if the user is a platform administrator.
+ * - `belongsToAgency(UUID agencyId)`: Validates whether the user belongs to
+ *   a specified agency. This is critical for ensuring multi-tenancy boundaries.
  */
 public record SecurityContext(
     UUID userId,
     ActorType actorType,
-    UUID agencyId, // null pour CUSTOMER et PLATFORM_ADMIN
+    UUID agencyId,
     Set<String> roles
 ) {
     public boolean hasRole(String role) {
@@ -30,11 +51,7 @@ public record SecurityContext(
     public boolean isPlatformAdmin() {
         return actorType == ActorType.PLATFORM_ADMIN;
     }
-    
-    /**
-     * Vérifie que cet acteur appartient à l'agence spécifiée.
-     * CRITIQUE pour la multi-tenance.
-     */
+
     public boolean belongsToAgency(UUID agencyId) {
         if (!isAgencyEmployee()) {
             return false;
