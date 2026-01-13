@@ -1,24 +1,16 @@
-package com.transport.platform.agency.infrastructure;
+package tech.bytesmind.logistics.agency.domain;
 
-import com.transport.platform.shared.tenancy.model.TenantAware;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
-import tech.bytesmind.logistics.agency.domain.AgencyLocation;
+import tech.bytesmind.logistics.shared.tenancy.model.TenantAware;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Entité JPA représentant une agence de transport (tenant).
- *
- * Conforme à ADR-006 : Multi-tenance logique.
- * Implémente TenantAware bien que l'agence SOIT elle-même le tenant.
- */
 @Setter
 @Getter
 @Entity
@@ -32,8 +24,6 @@ import java.util.UUID;
                 @Index(name = "idx_agency_country", columnList = "country")
         }
 )
-@SQLDelete(sql = "UPDATE agency SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
-@Where(clause = "deleted_at IS NULL")
 public class Agency implements TenantAware {
 
     @Id
