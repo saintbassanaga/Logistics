@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: logistics-db
+    environment:
+      POSTGRES_DB: logistics
+      POSTGRES_USER: transport_user
+      POSTGRES_PASSWORD: transport_password
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U transport_user -d transport_platform"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - logistics-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  logistics-network:
+    driver: bridge
