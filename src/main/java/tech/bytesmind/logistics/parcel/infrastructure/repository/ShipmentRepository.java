@@ -44,7 +44,7 @@ public interface ShipmentRepository extends JpaRepository<Shipment, UUID> {
     long countByAgencyIdAndStatus(@Param("agencyId") UUID agencyId, @Param("status") ShipmentStatus status);
 
     /**
-     * Compte les shipments d'une agence dont le numéro commence par un préfixe donné.
+     * Compte-les shipments d'une agence dont le numéro commence par un préfixe donné.
      * Utilisé par ShipmentNumberGenerator pour la génération séquentielle.
      */
     long countByAgencyIdAndShipmentNumberStartingWith(UUID agencyId, String prefix);

@@ -9,12 +9,16 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Service de génération des numéros de tracking pour les colis.
- * Format: TRK-{YYYYMMDD}-{8-CHARS}-{CHECKSUM}
- * Exemple: TRK-20260114-A7F3K9M2-X
+ * Service class responsible for generating and validating unique tracking numbers.
+ * Tracking numbers are generated following a specific format and include a checksum
+ * for validation purposes.
  * <p>
- * Le checksum utilise l'algorithme Luhn pour validation.
- * Garantit l'unicité via vérification en base.
+ * The tracking number format is structured as follows:
+ * TRK-{YYYYMMDD}-{RANDOM_PART}-{CHECKSUM}
+ * - Prefix: A fixed prefix "TRK".
+ * - Date (YYYYMMDD): The current date in year-month-day format.
+ * - Random Part: An 8-character randomly generated string excluding confusing characters (e.g., 'I', 'O', '0', '1').
+ * - Checksum: A single character derived from the previously mentioned parts using a checksum algorithm.
  */
 @Service
 @RequiredArgsConstructor

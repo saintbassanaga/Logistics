@@ -51,7 +51,7 @@ public class AgencyController {
     @PostMapping
     @RequireActor(ActorType.PLATFORM_ADMIN)
     public ResponseEntity<AgencyResponse> createAgency(@Valid @RequestBody CreateAgencyRequest request) {
-        log.info("POST /agencies - Creating agency: {}", request.code());
+        log.info("POST /agencies - Creating agency: {}", request.name());
 
         var context = securityContextService.getCurrentSecurityContext();
         agencyAccessPolicy.validateAccess(context, null); // Validation ABAC

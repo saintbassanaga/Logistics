@@ -22,6 +22,7 @@ public interface AgencyMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "code", ignore = true)
     @Mapping(target = "agencyLocations", ignore = true)
     Agency toEntity(CreateAgencyRequest request);
 

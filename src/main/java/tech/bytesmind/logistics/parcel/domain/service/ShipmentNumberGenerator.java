@@ -10,11 +10,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 /**
- * Service de génération des numéros de shipment.
- * Format: SHP-{YYYYMMDD}-{AGENCY_PREFIX}-{6-DIGITS}
- * Exemple: SHP-20260114-A5F-123456
- * <p>
- * Garantit l'unicité via vérification en base.
+ * Service responsable de la génération et de la validation des numéros uniques pour les shipments.
+ * Fournit une méthode pour générer des identifiants de shipment uniques basés sur une combinaison de
+ * la date, un préfixe d'agence dérivé de son UUID, et un numéro séquentiel ou aléatoire.
  */
 @Service
 @RequiredArgsConstructor

@@ -13,24 +13,30 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import tech.bytesmind.logistics.shared.security.service.SecurityContextService;
+import tech.bytesmind.logistics.shared.tenancy.filter.TenantContextFilter;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Configuration de sécurité pour OAuth2 Resource Server.
- * Valide les JWT émis par Keycloak et extrait les claims personnalisés.
+ * Security configuration class for the application.
  * <p>
- * Claims attendus dans le JWT:
- * - sub: user_id (UUID)
- * - actor_type: AGENCY_EMPLOYEE | CUSTOMER | PLATFORM_ADMIN
- * - agency_id: UUID (si AGENCY_EMPLOYEE)
- * - roles: Liste de rôles (ex: ["AGENCY_ADMIN", "SHIPMENT_MANAGER"])
+ * This class configures the application's security policies, including API request
+ * authorization, session management, and JWT authentication. It also integrates
+ * tenant-specific context filtering for multi-tenancy scenarios.
  * <p>
- * Note: Ce service ne charge JAMAIS d'utilisateur depuis la DB.
- * Il fait confiance au JWT émis par Keycloak (ADR-003, ADR-004).
+ * Key Components:
+ * - Disables CSRF protection for a stateless API.
+ * - Configures session management to be stateless.
+ * - Defines public endpoints that are accessible without authentication.
+ * - Ensures all other endpoints are protected and require authentication.
+ * - Configures JWT-based authentication with authority mapping for roles.
+ * - Adds a custom tenant context filter to process tenant-specific security data
+ *   after JWT authentication.
  */
 @Configuration
 @EnableWebSecurity
@@ -38,22 +44,26 @@ import java.util.stream.Collectors;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            TenantContextFilter tenantContextFilter
+    ) throws Exception {
+
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                        .requestMatchers("/error").permitAll()
-
-                        // OpenAPI / Swagger endpoints
-                        .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/v3/api-docs/**").permitAll()
-
-                        // All other endpoints require authentication
+                        .requestMatchers(
+                                "/actuator/health",
+                                "/actuator/info",
+                                "/error",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/api-docs/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 ->
@@ -62,12 +72,15 @@ public class SecurityConfig {
                         )
                 );
 
+        // 🔐 IMPORTANT : filtre tenant APRÈS le JWT
+        http.addFilterAfter(
+                tenantContextFilter,
+                BearerTokenAuthenticationFilter.class
+        );
+
         return http.build();
     }
 
-    /**
-     * Convertit le JWT en Authentication avec les rôles extraits.
-     */
     @Bean
     public Converter<Jwt, AbstractAuthenticationToken> jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
@@ -75,10 +88,6 @@ public class SecurityConfig {
         return converter;
     }
 
-    /**
-     * Extrait les rôles du JWT (claim "roles").
-     * Préfixe les rôles avec "ROLE_" pour compatibilité Spring Security.
-     */
     @Bean
     public Converter<Jwt, Collection<GrantedAuthority>> jwtGrantedAuthoritiesConverter() {
         return jwt -> {
@@ -90,5 +99,12 @@ public class SecurityConfig {
                     .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                     .collect(Collectors.toList());
         };
+    }
+
+    @Bean
+    public TenantContextFilter tenantContextFilter(
+            SecurityContextService securityContextService
+    ) {
+        return new TenantContextFilter(securityContextService);
     }
 }
