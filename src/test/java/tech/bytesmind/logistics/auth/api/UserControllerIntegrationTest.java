@@ -4,9 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.ResultActions;
 import tech.bytesmind.logistics.auth.api.dto.CreateUserRequest;
 import tech.bytesmind.logistics.auth.domain.model.Role;
@@ -19,7 +20,6 @@ import tech.bytesmind.logistics.shared.test.BaseIntegrationTest;
 
 import java.util.UUID;
 
-import static org.hamcrest.Matchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -35,20 +35,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - Le mapping JSON
  * - Les codes de statut HTTP
  */
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DisplayName("UserController Integration Tests")
+@ActiveProfiles("test")
 class UserControllerIntegrationTest extends BaseIntegrationTest {
 
-    @Autowired
-    private UserRepository userRepository;
+    @Bean
+    ObjectMapper objectMapper() {
+        return new ObjectMapper();
+    }
 
-    @Autowired
-    private RoleRepository roleRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private ObjectMapper objectMapper;
 
-    private Role agencyAdminRole;
+    private final RoleRepository roleRepository;
+
+    private final ObjectMapper objectMapper;
+
     private UUID testAgencyId;
+
+    public UserControllerIntegrationTest(UserRepository userRepository, RoleRepository roleRepository, ObjectMapper objectMapper, UUID testAgencyId) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.objectMapper = objectMapper;
+        this.testAgencyId = testAgencyId;
+    }
 
     @BeforeEach
     @Override
@@ -56,12 +67,12 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         super.setUp();
 
         // Créer un rôle de test
-        agencyAdminRole = new Role();
+        Role agencyAdminRole = new Role();
         agencyAdminRole.setCode("AGENCY_ADMIN");
         agencyAdminRole.setName("Agency Administrator");
         agencyAdminRole.setScope(RoleScope.AGENCY);
         agencyAdminRole.setActive(true);
-        agencyAdminRole = roleRepository.save(agencyAdminRole);
+        roleRepository.save(agencyAdminRole);
 
         testAgencyId = UUID.randomUUID();
     }
@@ -165,7 +176,6 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("GET /users/{id} - Should deny access when not authorized")
     void getUser_WhenNotAuthorized_ShouldDenyAccess() throws Exception {
-        // Given: Un utilisateur de l'agence A
         UUID agencyA = UUID.randomUUID();
         User userA = new User();
         userA.setEmail("user-a@example.com");
@@ -176,7 +186,6 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         userA.setActive(true);
         userA = userRepository.save(userA);
 
-        // When: Un employé de l'agence B tente d'accéder à l'utilisateur A
         UUID agencyB = UUID.randomUUID();
         UUID employeeBId = UUID.randomUUID();
         ResultActions result = mockMvc.perform(get("/users/{id}", userA.getId())
@@ -206,9 +215,10 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         currentUser = userRepository.save(currentUser);
 
         // When: GET /users/me
+        User finalCurrentUser = currentUser;
         ResultActions result = mockMvc.perform(get("/users/me")
                 .with(jwt().jwt(jwt -> jwt
-                        .claim("sub", currentUser.getId().toString())
+                        .claim("sub", finalCurrentUser.getId().toString())
                         .claim("actor_type", "AGENCY_EMPLOYEE")
                         .claim("agency_id", testAgencyId.toString())
                         .claim("roles", new String[]{})
