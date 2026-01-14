@@ -30,23 +30,23 @@ class ArchitectureTest {
      */
     @Test
     void boundedContexts_should_not_depend_on_each_other() {
-        ArchRule rule = noClasses()
+        // Auth ne doit pas dépendre de Agency ou Parcel
+        ArchRule authRule = noClasses()
             .that().resideInAPackage("..auth..")
             .should().dependOnClassesThat().resideInAnyPackage("..agency..", "..parcel..");
-        
-        rule.check(classes);
-        
-        ArchRule rule2 = noClasses()
+        authRule.check(classes);
+
+        // Agency ne doit pas dépendre de Auth ou Parcel
+        ArchRule agencyRule = noClasses()
             .that().resideInAPackage("..agency..")
             .should().dependOnClassesThat().resideInAnyPackage("..auth..", "..parcel..");
-        
-        rule2.check(classes);
-        
-        ArchRule rule3 = noClasses()
+        agencyRule.check(classes);
+
+        // Parcel ne doit pas dépendre de Auth ou Agency
+        ArchRule parcelRule = noClasses()
             .that().resideInAPackage("..parcel..")
             .should().dependOnClassesThat().resideInAnyPackage("..auth..", "..agency..");
-        
-        rule3.check(classes);
+        parcelRule.check(classes);
     }
     
     /**
