@@ -1,5 +1,7 @@
 package tech.bytesmind.logistics.auth.application.service;
 
+import tech.bytesmind.logistics.auth.api.dto.CreateUserRequest;
+import tech.bytesmind.logistics.auth.api.dto.UpdateUserRequest;
 import tech.bytesmind.logistics.auth.domain.model.User;
 
 import java.util.List;
@@ -13,7 +15,7 @@ public interface UserService {
     /**
      * Crée un nouvel utilisateur.
      */
-    User createUser(User user);
+    User createUser(CreateUserRequest request);
 
     /**
      * Récupère un utilisateur par son ID.
@@ -36,9 +38,9 @@ public interface UserService {
     User getUserByExternalAuthId(String externalAuthId);
 
     /**
-     * Liste tous les employés d'une agence.
+     * Liste tous les utilisateurs d'une agence.
      */
-    List<User> listAgencyEmployees(UUID agencyId);
+    List<User> listUsersByAgency(UUID agencyId);
 
     /**
      * Liste les employés actifs d'une agence.
@@ -47,18 +49,20 @@ public interface UserService {
 
     /**
      * Assigne un rôle à un utilisateur.
+     * Retourne l'utilisateur mis à jour.
      */
-    void assignRole(UUID userId, UUID roleId);
+    User assignRole(UUID userId, UUID roleId);
 
     /**
      * Révoque un rôle d'un utilisateur.
+     * Retourne l'utilisateur mis à jour.
      */
-    void revokeRole(UUID userId, UUID roleId);
+    User removeRole(UUID userId, UUID roleId);
 
     /**
      * Désactive un utilisateur.
      */
-    void deactivateUser(UUID userId, String reason);
+    void deactivateUser(UUID userId);
 
     /**
      * Réactive un utilisateur.
@@ -73,5 +77,5 @@ public interface UserService {
     /**
      * Met à jour les informations d'un utilisateur.
      */
-    User updateUser(UUID userId, User updatedData);
+    User updateUser(UUID userId, UpdateUserRequest request);
 }

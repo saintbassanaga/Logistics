@@ -3,8 +3,11 @@ package tech.bytesmind.logistics.agency.api.dto;
 import jakarta.validation.constraints.*;
 import tech.bytesmind.logistics.agency.domain.model.SubscriptionTier;
 
+/**
+ * DTO pour la création d'une agence.
+ * Le code est automatiquement généré par AgencyCodeGenerator.
+ */
 public record CreateAgencyRequest(
-        @NotBlank @Size(max = 50) String code,
         @NotBlank @Size(max = 255) String name,
         @Size(max = 255) String legalName,
         @NotBlank @Email String email,

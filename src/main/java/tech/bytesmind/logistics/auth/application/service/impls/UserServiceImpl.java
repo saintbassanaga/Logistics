@@ -1,9 +1,13 @@
 package tech.bytesmind.logistics.auth.application.service.impls;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tech.bytesmind.logistics.auth.api.dto.CreateUserRequest;
+import tech.bytesmind.logistics.auth.api.dto.UpdateUserRequest;
+import tech.bytesmind.logistics.auth.application.mapper.UserMapper;
 import tech.bytesmind.logistics.auth.application.service.UserService;
 import tech.bytesmind.logistics.auth.domain.event.*;
 import tech.bytesmind.logistics.auth.domain.model.Role;
@@ -22,6 +26,7 @@ import java.util.UUID;
  * Orchestration de la logique métier et publication d'événements.
  */
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
@@ -29,31 +34,26 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final UserDomainService userDomainService;
+    private final UserMapper userMapper;
     private final TransactionalEventPublisher eventPublisher;
-
-    public UserServiceImpl(
-            UserRepository userRepository,
-            RoleRepository roleRepository,
-            UserDomainService userDomainService,
-            TransactionalEventPublisher eventPublisher
-    ) {
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.userDomainService = userDomainService;
-        this.eventPublisher = eventPublisher;
-    }
 
     @Override
     @Transactional
-    public User createUser(User user) {
-        log.info("Creating user: {}", user.getEmail());
+    public User createUser(CreateUserRequest request) {
+        log.info("Creating user: {}", request.email());
 
+        // Convertir DTO → Entity via UserMapper
+        User user = userMapper.toEntity(request);
+
+        // Valider l'entité via le service de domaine
         userDomainService.validateUser(user);
 
-        if (userRepository.existsByEmail(user.getEmail())) {
-            throw new BusinessException("User with email '" + user.getEmail() + "' already exists");
+        // Vérifier unicité email
+        if (userRepository.existsByEmail(request.email())) {
+            throw new BusinessException("User with email '" + request.email() + "' already exists");
         }
 
+        // Sauvegarder
         User saved = userRepository.save(user);
 
         // Publier événement
@@ -98,7 +98,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<User> listAgencyEmployees(UUID agencyId) {
+    public List<User> listUsersByAgency(UUID agencyId) {
         return userRepository.findAgencyEmployees(agencyId);
     }
 
@@ -110,7 +110,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void assignRole(UUID userId, UUID roleId) {
+    public User assignRole(UUID userId, UUID roleId) {
         log.info("Assigning role {} to user {}", roleId, userId);
 
         User user = getUserById(userId);
@@ -118,7 +118,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new BusinessException("Role not found: " + roleId));
 
         userDomainService.assignRole(user, role);
-        userRepository.save(user);
+        User saved = userRepository.save(user);
 
         // Publier événement
         eventPublisher.publish(new RoleAssignedEvent(
@@ -129,19 +129,20 @@ public class UserServiceImpl implements UserService {
         ));
 
         log.info("Role assigned successfully");
+        return saved;
     }
 
     @Override
     @Transactional
-    public void revokeRole(UUID userId, UUID roleId) {
-        log.info("Revoking role {} from user {}", roleId, userId);
+    public User removeRole(UUID userId, UUID roleId) {
+        log.info("Removing role {} from user {}", roleId, userId);
 
         User user = getUserById(userId);
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new BusinessException("Role not found: " + roleId));
 
         userDomainService.revokeRole(user, role);
-        userRepository.save(user);
+        User saved = userRepository.save(user);
 
         // Publier événement
         eventPublisher.publish(new RoleRevokedEvent(
@@ -151,12 +152,13 @@ public class UserServiceImpl implements UserService {
                 user.getAgencyId()
         ));
 
-        log.info("Role revoked successfully");
+        log.info("Role removed successfully");
+        return saved;
     }
 
     @Override
     @Transactional
-    public void deactivateUser(UUID userId, String reason) {
+    public void deactivateUser(UUID userId) {
         log.info("Deactivating user: {}", userId);
 
         User user = getUserById(userId);
@@ -166,7 +168,7 @@ public class UserServiceImpl implements UserService {
         // Publier événement
         eventPublisher.publish(new UserDeactivatedEvent(
                 user.getId(),
-                reason,
+                null, // Reason removed from signature
                 user.getAgencyId()
         ));
 
@@ -208,18 +210,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User updateUser(UUID userId, User updatedData) {
+    public User updateUser(UUID userId, UpdateUserRequest request) {
         log.info("Updating user: {}", userId);
 
         User existing = getUserById(userId);
 
-        // Mise à jour des champs modifiables
-        existing.setFirstName(updatedData.getFirstName());
-        existing.setLastName(updatedData.getLastName());
-        existing.setPhone(updatedData.getPhone());
-        existing.setJobTitle(updatedData.getJobTitle());
-        existing.setDepartment(updatedData.getDepartment());
+        // Utiliser le mapper pour mettre à jour les champs modifiables
+        userMapper.updateEntity(request, existing);
 
+        // Valider après mise à jour
         userDomainService.validateUser(existing);
 
         User updated = userRepository.save(existing);

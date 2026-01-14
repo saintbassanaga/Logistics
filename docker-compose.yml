@@ -11,15 +11,60 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U transport_user -d transport_platform"]
+      test: [ "CMD-SHELL", "pg_isready -U transport_user -d logistics" ]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - logistics-network
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: logistics-keycloak
+    environment:
+      # Admin credentials
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin123
+
+      # Database configuration
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/logistics
+      KC_DB_USERNAME: transport_user
+      KC_DB_PASSWORD: transport_password
+      KC_DB_SCHEMA: keycloak
+
+      # Hostname configuration
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_STRICT: false
+      KC_HTTP_ENABLED: true
+
+      # Proxy configuration
+      KC_PROXY: edge
+
+    ports:
+      - "8080:8080"
+    command:
+      - start-dev
+      - --import-realm
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ./keycloak-realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/health/ready || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - logistics-network
+
 volumes:
   postgres_data:
+    driver: local
+  keycloak_data:
     driver: local
 
 networks:

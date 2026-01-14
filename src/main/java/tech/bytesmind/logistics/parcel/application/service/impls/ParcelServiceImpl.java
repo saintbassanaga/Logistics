@@ -13,6 +13,7 @@ import tech.bytesmind.logistics.parcel.domain.model.ParcelStatus;
 import tech.bytesmind.logistics.parcel.domain.model.Shipment;
 import tech.bytesmind.logistics.parcel.domain.service.ParcelDomainService;
 import tech.bytesmind.logistics.parcel.domain.service.ShipmentDomainService;
+import tech.bytesmind.logistics.parcel.domain.service.TrackingNumberGenerator;
 import tech.bytesmind.logistics.parcel.infrastructure.repository.ParcelRepository;
 import tech.bytesmind.logistics.parcel.infrastructure.repository.ShipmentRepository;
 import tech.bytesmind.logistics.shared.event.publisher.TransactionalEventPublisher;
@@ -35,6 +36,7 @@ public class ParcelServiceImpl implements ParcelService {
     private final ShipmentRepository shipmentRepository;
     private final ParcelDomainService parcelDomainService;
     private final ShipmentDomainService shipmentDomainService;
+    private final TrackingNumberGenerator trackingNumberGenerator;
     private final TransactionalEventPublisher eventPublisher;
 
     public ParcelServiceImpl(
@@ -42,12 +44,14 @@ public class ParcelServiceImpl implements ParcelService {
             ShipmentRepository shipmentRepository,
             ParcelDomainService parcelDomainService,
             ShipmentDomainService shipmentDomainService,
+            TrackingNumberGenerator trackingNumberGenerator,
             TransactionalEventPublisher eventPublisher
     ) {
         this.parcelRepository = parcelRepository;
         this.shipmentRepository = shipmentRepository;
         this.parcelDomainService = parcelDomainService;
         this.shipmentDomainService = shipmentDomainService;
+        this.trackingNumberGenerator = trackingNumberGenerator;
         this.eventPublisher = eventPublisher;
     }
 
@@ -65,15 +69,10 @@ public class ParcelServiceImpl implements ParcelService {
         // Valider les données du parcel
         parcelDomainService.validateParcelData(parcel);
 
-        // Générer le tracking number
-        String trackingNumber = parcelDomainService.generateTrackingNumber(
-                shipment.getAgencyId().toString().substring(0, 8)
-        );
+        // Générer le tracking number automatiquement
+        String trackingNumber = trackingNumberGenerator.generateUniqueTrackingNumber();
         parcel.setTrackingNumber(trackingNumber);
-
-        if (parcelRepository.existsByTrackingNumber(trackingNumber)) {
-            throw new BusinessException("Tracking number already exists: " + trackingNumber);
-        }
+        log.info("Generated tracking number: {}", trackingNumber);
 
         // Associer au shipment et à l'agence
         parcel.setShipment(shipment);

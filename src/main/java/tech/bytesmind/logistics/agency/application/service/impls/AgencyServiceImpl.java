@@ -13,6 +13,7 @@ import tech.bytesmind.logistics.agency.domain.event.AgencySuspendedEvent;
 import tech.bytesmind.logistics.agency.domain.model.Agency;
 import tech.bytesmind.logistics.agency.domain.model.AgencyLocation;
 import tech.bytesmind.logistics.agency.domain.model.LocationType;
+import tech.bytesmind.logistics.agency.domain.service.AgencyCodeGenerator;
 import tech.bytesmind.logistics.agency.domain.service.AgencyDomainService;
 import tech.bytesmind.logistics.agency.infrastructure.repository.AgencyRepository;
 import tech.bytesmind.logistics.shared.event.publisher.TransactionalEventPublisher;
@@ -28,17 +29,20 @@ public class AgencyServiceImpl implements AgencyService {
 
     private final AgencyRepository agencyRepository;
     private final AgencyDomainService domainService;
+    private final AgencyCodeGenerator codeGenerator;
     private final AgencyMapper agencyMapper;
     private final TransactionalEventPublisher eventPublisher;
 
     public AgencyServiceImpl(
             AgencyRepository agencyRepository,
             AgencyDomainService domainService,
+            AgencyCodeGenerator codeGenerator,
             AgencyMapper agencyMapper,
             TransactionalEventPublisher eventPublisher
     ) {
         this.agencyRepository = agencyRepository;
         this.domainService = domainService;
+        this.codeGenerator = codeGenerator;
         this.agencyMapper = agencyMapper;
         this.eventPublisher = eventPublisher;
     }
@@ -46,17 +50,24 @@ public class AgencyServiceImpl implements AgencyService {
     @Override
     @Transactional
     public Agency createAgency(CreateAgencyRequest request) {
-        log.info("Creating agency: {}", request.code());
+        log.info("Creating agency: {}", request.name());
 
-        if (agencyRepository.existsByCode(request.code())) {
-            throw new BusinessException("Agency with code '" + request.code() + "' already exists");
-        }
-
+        // Vérifier unicité de l'email
         if (agencyRepository.existsByEmail(request.email())) {
             throw new BusinessException("Agency with email '" + request.email() + "' already exists");
         }
 
+        // Générer le code automatiquement
+        String generatedCode = codeGenerator.generateUniqueCode();
+        log.info("Generated agency code: {}", generatedCode);
+
+        // Convertir DTO → Entity
         Agency agency = agencyMapper.toEntity(request);
+
+        // Assigner le code généré
+        agency.setCode(generatedCode);
+
+        // Sauvegarder l'agence
         agency = agencyRepository.save(agency);
 
         // Créer le siège social automatiquement

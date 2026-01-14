@@ -9,6 +9,7 @@ import tech.bytesmind.logistics.parcel.domain.event.ShipmentConfirmedEvent;
 import tech.bytesmind.logistics.parcel.domain.event.ShipmentCreatedEvent;
 import tech.bytesmind.logistics.parcel.domain.model.Shipment;
 import tech.bytesmind.logistics.parcel.domain.service.ShipmentDomainService;
+import tech.bytesmind.logistics.parcel.domain.service.ShipmentNumberGenerator;
 import tech.bytesmind.logistics.parcel.infrastructure.repository.ShipmentRepository;
 import tech.bytesmind.logistics.shared.event.publisher.TransactionalEventPublisher;
 import tech.bytesmind.logistics.shared.exceptions.BusinessException;
@@ -27,15 +28,18 @@ public class ShipmentServiceImpl implements ShipmentService {
 
     private final ShipmentRepository shipmentRepository;
     private final ShipmentDomainService domainService;
+    private final ShipmentNumberGenerator numberGenerator;
     private final TransactionalEventPublisher eventPublisher;
 
     public ShipmentServiceImpl(
             ShipmentRepository shipmentRepository,
             ShipmentDomainService domainService,
+            ShipmentNumberGenerator numberGenerator,
             TransactionalEventPublisher eventPublisher
     ) {
         this.shipmentRepository = shipmentRepository;
         this.domainService = domainService;
+        this.numberGenerator = numberGenerator;
         this.eventPublisher = eventPublisher;
     }
 
@@ -47,13 +51,10 @@ public class ShipmentServiceImpl implements ShipmentService {
         shipment.setAgencyId(agencyId);
         domainService.validateShipmentData(shipment);
 
-        // Générer le numéro de shipment (nécessite le code de l'agence - simplifié ici)
-        String shipmentNumber = domainService.generateShipmentNumber(agencyId.toString().substring(0, 8));
+        // Générer le numéro de shipment automatiquement
+        String shipmentNumber = numberGenerator.generateUniqueNumber(agencyId);
         shipment.setShipmentNumber(shipmentNumber);
-
-        if (shipmentRepository.existsByShipmentNumber(shipmentNumber)) {
-            throw new BusinessException("Shipment number already exists: " + shipmentNumber);
-        }
+        log.info("Generated shipment number: {}", shipmentNumber);
 
         Shipment saved = shipmentRepository.save(shipment);
 

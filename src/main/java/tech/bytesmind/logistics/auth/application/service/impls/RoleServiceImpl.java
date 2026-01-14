@@ -1,9 +1,13 @@
 package tech.bytesmind.logistics.auth.application.service.impls;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tech.bytesmind.logistics.auth.api.dto.CreateRoleRequest;
+import tech.bytesmind.logistics.auth.api.dto.UpdateRoleRequest;
+import tech.bytesmind.logistics.auth.application.mapper.RoleMapper;
 import tech.bytesmind.logistics.auth.application.service.RoleService;
 import tech.bytesmind.logistics.auth.domain.model.Role;
 import tech.bytesmind.logistics.auth.domain.model.RoleScope;
@@ -15,35 +19,39 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Implémentation du service applicatif pour les Roles.
+ * Implementation of the RoleService interface, providing methods for managing roles
+ * such as creation, retrieval, updating, activation, and deactivation.
+ * This service leverages RoleRepository for persistence operations and RoleDomainService
+ * for domain logic validation and manipulation. Transaction management is used
+ * to ensure consistency in database operations.
  */
 @Service
+@RequiredArgsConstructor
 public class RoleServiceImpl implements RoleService {
 
     private static final Logger log = LoggerFactory.getLogger(RoleServiceImpl.class);
 
     private final RoleRepository roleRepository;
     private final RoleDomainService roleDomainService;
-
-    public RoleServiceImpl(
-            RoleRepository roleRepository,
-            RoleDomainService roleDomainService
-    ) {
-        this.roleRepository = roleRepository;
-        this.roleDomainService = roleDomainService;
-    }
+    private final RoleMapper roleMapper;
 
     @Override
     @Transactional
-    public Role createRole(Role role) {
-        log.info("Creating role: {}", role.getCode());
+    public Role createRole(CreateRoleRequest request) {
+        log.info("Creating role: {}", request.code());
 
+        // Convertir DTO → Entity via RoleMapper
+        Role role = roleMapper.toEntity(request);
+
+        // Valider l'entité via le service de domaine
         roleDomainService.validateRole(role);
 
-        if (roleRepository.existsByCode(role.getCode())) {
-            throw new BusinessException("Role with code '" + role.getCode() + "' already exists");
+        // Vérifier unicité du code
+        if (roleRepository.existsByCode(request.code())) {
+            throw new BusinessException("Role with code '" + request.code() + "' already exists");
         }
 
+        // Sauvegarder
         Role saved = roleRepository.save(role);
         log.info("Role created successfully: {}", saved.getId());
 
@@ -84,15 +92,15 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
-    public Role updateRole(UUID roleId, Role updatedData) {
+    public Role updateRole(UUID roleId, UpdateRoleRequest request) {
         log.info("Updating role: {}", roleId);
 
         Role existing = getRoleById(roleId);
 
-        // Mise à jour des champs modifiables
-        existing.setName(updatedData.getName());
-        existing.setDescription(updatedData.getDescription());
+        // Utiliser le mapper pour mettre à jour les champs modifiables
+        roleMapper.updateEntity(request, existing);
 
+        // Valider après mise à jour
         roleDomainService.validateRole(existing);
 
         Role updated = roleRepository.save(existing);

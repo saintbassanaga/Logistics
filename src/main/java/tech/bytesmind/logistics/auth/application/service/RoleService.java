@@ -1,5 +1,7 @@
 package tech.bytesmind.logistics.auth.application.service;
 
+import tech.bytesmind.logistics.auth.api.dto.CreateRoleRequest;
+import tech.bytesmind.logistics.auth.api.dto.UpdateRoleRequest;
 import tech.bytesmind.logistics.auth.domain.model.Role;
 import tech.bytesmind.logistics.auth.domain.model.RoleScope;
 
@@ -14,7 +16,7 @@ public interface RoleService {
     /**
      * Crée un nouveau rôle.
      */
-    Role createRole(Role role);
+    Role createRole(CreateRoleRequest request);
 
     /**
      * Récupère un rôle par son ID.
@@ -44,7 +46,7 @@ public interface RoleService {
     /**
      * Met à jour un rôle.
      */
-    Role updateRole(UUID roleId, Role updatedData);
+    Role updateRole(UUID roleId, UpdateRoleRequest request);
 
     /**
      * Désactive un rôle.

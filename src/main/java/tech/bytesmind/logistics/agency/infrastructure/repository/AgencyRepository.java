@@ -37,4 +37,10 @@ public interface AgencyRepository extends JpaRepository<Agency, UUID> {
 
     @Query("SELECT a FROM Agency a LEFT JOIN FETCH a.agencyLocations WHERE a.id = :id")
     Optional<Agency> findByIdWithLocations(@Param("id") UUID id);
+
+    /**
+     * Compte les agences dont le code commence par un préfixe donné.
+     * Utilisé par AgencyCodeGenerator pour la génération séquentielle.
+     */
+    long countByCodeStartingWith(String prefix);
 }

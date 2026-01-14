@@ -22,6 +22,7 @@ configurations {
 
 extra["mapstructVersion"] = "1.6.3"
 extra["archunitVersion"] = "1.3.0"
+extra["testcontainersVersion"] = "1.20.4"
 
 repositories {
 	mavenCentral()
@@ -53,6 +54,9 @@ dependencies {
 	annotationProcessor("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
 
+	// OpenAPI / Swagger
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4")
+
 	// Observability
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 
@@ -60,6 +64,13 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
 	testImplementation("com.tngtech.archunit:archunit-junit5:${property("archunitVersion")}")
+
+	// TestContainers
+	testImplementation("org.testcontainers:testcontainers:${property("testcontainersVersion")}")
+	testImplementation("org.testcontainers:junit-jupiter:${property("testcontainersVersion")}")
+	testImplementation("org.testcontainers:postgresql:${property("testcontainersVersion")}")
+	testImplementation("org.springframework.boot:spring-boot-testcontainers")
+
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
