@@ -35,3 +35,24 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Environment Variables and Secrets ###
+.env
+.env.local
+.env.prod
+.env.production
+*.key
+*.pem
+*.p12
+*.jks
+*.keystore
+certs/
+secrets/
+
+### Logs ###
+logs/
+*.log
+
+### Temporary files ###
+*.tmp
+*.temp

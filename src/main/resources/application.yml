@@ -6,9 +6,9 @@ spring:
     active: local
 
   datasource:
-    url: jdbc:postgresql://localhost:5434/logistics
-    username: transport_user
-    password: transport_password
+    url: ${DATASOURCE_URL:jdbc:postgresql://localhost:5434/logistics}
+    username: ${POSTGRES_USER:transport_user}
+    password: ${POSTGRES_PASSWORD:transport_dev_password_12345}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -46,7 +46,7 @@ spring:
       include-binding-errors: always
 
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
 
 logging:
   level:

@@ -82,7 +82,7 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
                 ActorType.AGENCY_EMPLOYEE,
                 testAgencyId,
                 "Manager",
-                "Operations"
+                "Operations", null
         );
 
         // When: POST /users
@@ -117,9 +117,9 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
                 "Doe",
                 null,
                 ActorType.AGENCY_EMPLOYEE,
-                null, // INVALID: AGENCY_EMPLOYEE doit avoir agencyId
                 null,
-                null
+                null,
+                null, null
         );
 
         // When: POST /users
@@ -236,7 +236,7 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
                 ActorType.CUSTOMER,
                 null,
                 null,
-                null
+                null, null
         );
 
         // When: POST /users sans authentification

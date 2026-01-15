@@ -16,6 +16,6 @@ public record CreateUserRequest(
         @NotNull ActorType actorType,
         UUID agencyId,
         @Size(max = 100) String jobTitle,
-        @Size(max = 100) String department
-) {
+        @Size(max = 100) String department,
+        @Size(max = 100) String username) {
 }

@@ -39,7 +39,9 @@
     "password",
     "otp"
   ],
-  "passwordPolicy": "length(8) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1) and notUsername",
+  "passwordPolicy": "length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1) and notUsername and notEmail and passwordHistory(5)",
+  "sslRequired": "external",
+  "defaultSignatureAlgorithm": "RS256",
   "clients": [
     {
       "clientId": "logistics-backend",
@@ -64,7 +66,7 @@
       "publicClient": true,
       "bearerOnly": false,
       "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": true,
+      "directAccessGrantsEnabled": false,
       "implicitFlowEnabled": false,
       "serviceAccountsEnabled": false,
       "protocol": "openid-connect",
@@ -74,11 +76,20 @@
       ],
       "webOrigins": [
         "http://localhost:3000",
-        "http://localhost:4200"
+        "http://localhost:4200",
+        "+"
       ],
       "attributes": {
-        "pkce.code.challenge.method": "S256"
-      }
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "+"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ]
     }
   ],
   "roles": {
@@ -110,6 +121,10 @@
       {
         "name": "SORTING_OPERATOR",
         "description": "Sorting Operator"
+      },
+      {
+        "name": "CUSTOMER",
+        "description": "Customer - Parcel sender/receiver"
       }
     ]
   },
@@ -157,10 +172,63 @@
       }
     }
   ],
+  "eventsEnabled": true,
+  "eventsExpiration": 2592000,
+  "eventsListeners": [
+    "jboss-logging"
+  ],
+  "enabledEventTypes": [
+    "LOGIN",
+    "LOGIN_ERROR",
+    "LOGOUT",
+    "LOGOUT_ERROR",
+    "REGISTER",
+    "REGISTER_ERROR",
+    "UPDATE_PASSWORD",
+    "UPDATE_PASSWORD_ERROR",
+    "VERIFY_EMAIL",
+    "VERIFY_EMAIL_ERROR"
+  ],
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": true,
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "en",
+    "fr"
+  ],
+  "defaultLocale": "en",
+  "components": {
+    "org.keycloak.keys.KeyProvider": [
+      {
+        "name": "rsa-generated",
+        "providerId": "rsa-generated",
+        "config": {
+          "keySize": [
+            "4096"
+          ],
+          "priority": [
+            "100"
+          ]
+        }
+      },
+      {
+        "name": "hmac-generated",
+        "providerId": "hmac-generated",
+        "config": {
+          "secretSize": [
+            "512"
+          ],
+          "priority": [
+            "100"
+          ]
+        }
+      }
+    ]
+  },
   "authenticationFlows": [
     {
-      "alias": "browser-with-totp",
-      "description": "Browser based authentication with TOTP",
+      "alias": "browser",
+      "description": "Browser based authentication",
       "providerId": "basic-flow",
       "topLevel": true,
       "builtIn": false,
@@ -174,14 +242,9 @@
           "authenticator": "auth-username-password-form",
           "requirement": "REQUIRED",
           "priority": 20
-        },
-        {
-          "authenticator": "auth-otp-form",
-          "requirement": "REQUIRED",
-          "priority": 30
         }
       ]
     }
   ],
-  "browserFlow": "browser-with-totp"
+  "browserFlow": "browser"
 }

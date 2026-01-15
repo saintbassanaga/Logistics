@@ -30,6 +30,8 @@ public interface UserMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "lastLoginAt", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "passwordHash", ignore = true)
+    @Mapping(target = "username", source = "username")
     User toEntity(CreateUserRequest request);
 
     /**

@@ -3,61 +3,82 @@ services:
     image: postgres:16-alpine
     container_name: logistics-db
     environment:
-      POSTGRES_DB: logistics
-      POSTGRES_USER: transport_user
-      POSTGRES_PASSWORD: transport_password
+      POSTGRES_DB: ${POSTGRES_DB:-logistics}
+      POSTGRES_USER: ${POSTGRES_USER:-transport_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     ports:
-      - "5434:5432"
+      - "${POSTGRES_PORT:-5434}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U transport_user -d logistics" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-transport_user} -d ${POSTGRES_DB:-logistics}" ]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
     networks:
       - logistics-network
 
   keycloak:
-    image: quay.io/keycloak/keycloak:23.0
+    image: quay.io/keycloak/keycloak:25.0
     container_name: logistics-keycloak
     environment:
-      # Admin credentials
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin123
+      # Admin credentials (required)
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:?KEYCLOAK_ADMIN is required}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?KEYCLOAK_ADMIN_PASSWORD is required}
 
-      # Database configuration
+      # Database configuration (required)
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/logistics
-      KC_DB_USERNAME: transport_user
-      KC_DB_PASSWORD: transport_password
-      KC_DB_SCHEMA: keycloak
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-logistics}
+      KC_DB_USERNAME: ${POSTGRES_USER:-transport_user}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      KC_DB_SCHEMA: ${KC_DB_SCHEMA:-keycloak}
 
-      # Hostname configuration
-      KC_HOSTNAME: localhost
-      KC_HOSTNAME_STRICT: false
-      KC_HTTP_ENABLED: true
+      # Hostname configuration (required for production)
+      KC_HOSTNAME: ${KC_HOSTNAME:?KC_HOSTNAME is required}
+      KC_HOSTNAME_STRICT: ${KC_HOSTNAME_STRICT:-true}
+      KC_HOSTNAME_PORT: ${KC_HOSTNAME_PORT:-443}
 
-      # Proxy configuration
-      KC_PROXY: edge
+      # HTTP/HTTPS configuration
+      KC_HTTP_ENABLED: ${KC_HTTP_ENABLED:-false}
+      KC_HTTPS_ENABLED: ${KC_HTTPS_ENABLED:-true}
+      KC_HTTPS_CERTIFICATE_FILE: ${KC_HTTPS_CERTIFICATE_FILE:-/opt/keycloak/conf/server.crt.pem}
+      KC_HTTPS_CERTIFICATE_KEY_FILE: ${KC_HTTPS_CERTIFICATE_KEY_FILE:-/opt/keycloak/conf/server.key.pem}
+
+      # Proxy configuration (for reverse proxy deployments)
+      KC_PROXY: ${KC_PROXY:-edge}
+      KC_PROXY_HEADERS: ${KC_PROXY_HEADERS:-xforwarded}
+
+      # Health check
+      KC_HEALTH_ENABLED: true
+      KC_METRICS_ENABLED: ${KC_METRICS_ENABLED:-true}
+
+      # Transaction settings
+      KC_TRANSACTION_XA_ENABLED: ${KC_TRANSACTION_XA_ENABLED:-false}
+
+      # Logging
+      KC_LOG_LEVEL: ${KC_LOG_LEVEL:-info}
 
     ports:
-      - "8080:8080"
+      - "${KC_HTTP_PORT:-8080}:8080"
+      - "${KC_HTTPS_PORT:-8443}:8443"
     command:
-      - start-dev
+      - start
       - --import-realm
     volumes:
       - keycloak_data:/opt/keycloak/data
       - ./keycloak-realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+      - ./certs:/opt/keycloak/conf:ro
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:8080/health/ready || exit 1" ]
+      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'" ]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 90s
+    restart: unless-stopped
     networks:
       - logistics-network
 
