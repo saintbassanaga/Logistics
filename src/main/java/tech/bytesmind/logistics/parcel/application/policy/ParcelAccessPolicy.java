@@ -1,4 +1,4 @@
-package tech.bytesmind.logistics.parcel.domain.policy;
+package tech.bytesmind.logistics.parcel.application.policy;
 
 import org.springframework.stereotype.Component;
 import tech.bytesmind.logistics.parcel.domain.model.Parcel;

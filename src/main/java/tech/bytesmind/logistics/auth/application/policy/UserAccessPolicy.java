@@ -1,4 +1,4 @@
-package tech.bytesmind.logistics.auth.domain.policy;
+package tech.bytesmind.logistics.auth.application.policy;
 
 import org.springframework.stereotype.Component;
 import tech.bytesmind.logistics.auth.domain.model.User;

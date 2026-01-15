@@ -21,7 +21,7 @@ import tech.bytesmind.logistics.auth.api.dto.UpdateRoleRequest;
 import tech.bytesmind.logistics.auth.application.mapper.RoleMapper;
 import tech.bytesmind.logistics.auth.application.service.RoleService;
 import tech.bytesmind.logistics.auth.domain.model.Role;
-import tech.bytesmind.logistics.auth.domain.policy.RoleAccessPolicy;
+import tech.bytesmind.logistics.auth.application.policy.RoleAccessPolicy;
 import tech.bytesmind.logistics.shared.security.annotations.RequireActor;
 import tech.bytesmind.logistics.shared.security.model.ActorType;
 import tech.bytesmind.logistics.shared.security.service.SecurityContextService;

@@ -1,4 +1,4 @@
-package tech.bytesmind.logistics.parcel.domain.service;
+package tech.bytesmind.logistics.parcel.application.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

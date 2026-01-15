@@ -13,7 +13,7 @@ import tech.bytesmind.logistics.parcel.domain.model.ParcelStatus;
 import tech.bytesmind.logistics.parcel.domain.model.Shipment;
 import tech.bytesmind.logistics.parcel.domain.service.ParcelDomainService;
 import tech.bytesmind.logistics.parcel.domain.service.ShipmentDomainService;
-import tech.bytesmind.logistics.parcel.domain.service.TrackingNumberGenerator;
+import tech.bytesmind.logistics.parcel.application.service.TrackingNumberGenerator;
 import tech.bytesmind.logistics.parcel.infrastructure.repository.ParcelRepository;
 import tech.bytesmind.logistics.parcel.infrastructure.repository.ShipmentRepository;
 import tech.bytesmind.logistics.shared.event.publisher.TransactionalEventPublisher;

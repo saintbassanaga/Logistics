@@ -13,7 +13,7 @@ import tech.bytesmind.logistics.agency.domain.event.AgencySuspendedEvent;
 import tech.bytesmind.logistics.agency.domain.model.Agency;
 import tech.bytesmind.logistics.agency.domain.model.AgencyLocation;
 import tech.bytesmind.logistics.agency.domain.model.LocationType;
-import tech.bytesmind.logistics.agency.domain.service.AgencyCodeGenerator;
+import tech.bytesmind.logistics.agency.application.service.AgencyCodeGenerator;
 import tech.bytesmind.logistics.agency.domain.service.AgencyDomainService;
 import tech.bytesmind.logistics.agency.infrastructure.repository.AgencyRepository;
 import tech.bytesmind.logistics.shared.event.publisher.TransactionalEventPublisher;

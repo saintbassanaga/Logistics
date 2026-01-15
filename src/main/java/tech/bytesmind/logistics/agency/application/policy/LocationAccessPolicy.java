@@ -1,4 +1,4 @@
-package tech.bytesmind.logistics.agency.domain.policy;
+package tech.bytesmind.logistics.agency.application.policy;
 
 
 import org.springframework.stereotype.Component;

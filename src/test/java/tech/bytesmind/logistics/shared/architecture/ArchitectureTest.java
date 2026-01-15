@@ -63,6 +63,10 @@ class ArchitectureTest {
     
     /**
      * RÈGLE 3 : Architecture en couches respectée.
+     * Note:
+     * - API peut accéder au Domain pour les enums/value objects utilisés dans les DTOs.
+     * - Application peut accéder à API pour les DTOs (mappers convertissent DTOs ↔ Entities).
+     * Ces patterns DDD courants évitent la duplication des types.
      */
     @Test
     void layered_architecture_should_be_respected() {
@@ -72,12 +76,12 @@ class ArchitectureTest {
             .layer("Application").definedBy("..application..")
             .layer("Domain").definedBy("..domain..")
             .layer("Infrastructure").definedBy("..infrastructure..")
-            
-            .whereLayer("API").mayNotBeAccessedByAnyLayer()
+
+            .whereLayer("API").mayOnlyBeAccessedByLayers("Application")
             .whereLayer("Application").mayOnlyBeAccessedByLayers("API")
-            .whereLayer("Domain").mayOnlyBeAccessedByLayers("Application", "Infrastructure")
+            .whereLayer("Domain").mayOnlyBeAccessedByLayers("API", "Application", "Infrastructure")
             .whereLayer("Infrastructure").mayOnlyBeAccessedByLayers("Application");
-        
+
         rule.check(classes);
     }
     

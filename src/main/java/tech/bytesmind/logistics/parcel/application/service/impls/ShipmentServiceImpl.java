@@ -9,7 +9,7 @@ import tech.bytesmind.logistics.parcel.domain.event.ShipmentConfirmedEvent;
 import tech.bytesmind.logistics.parcel.domain.event.ShipmentCreatedEvent;
 import tech.bytesmind.logistics.parcel.domain.model.Shipment;
 import tech.bytesmind.logistics.parcel.domain.service.ShipmentDomainService;
-import tech.bytesmind.logistics.parcel.domain.service.ShipmentNumberGenerator;
+import tech.bytesmind.logistics.parcel.application.service.ShipmentNumberGenerator;
 import tech.bytesmind.logistics.parcel.infrastructure.repository.ShipmentRepository;
 import tech.bytesmind.logistics.shared.event.publisher.TransactionalEventPublisher;
 import tech.bytesmind.logistics.shared.exceptions.BusinessException;

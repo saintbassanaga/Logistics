@@ -13,7 +13,7 @@ import tech.bytesmind.logistics.parcel.api.dto.UpdateParcelStatusRequest;
 import tech.bytesmind.logistics.parcel.application.mapper.ParcelMapper;
 import tech.bytesmind.logistics.parcel.application.service.ParcelService;
 import tech.bytesmind.logistics.parcel.domain.model.Parcel;
-import tech.bytesmind.logistics.parcel.domain.policy.ParcelAccessPolicy;
+import tech.bytesmind.logistics.parcel.application.policy.ParcelAccessPolicy;
 import tech.bytesmind.logistics.shared.security.annotations.RequireActor;
 import tech.bytesmind.logistics.shared.security.annotations.RequireRole;
 import tech.bytesmind.logistics.shared.security.model.ActorType;

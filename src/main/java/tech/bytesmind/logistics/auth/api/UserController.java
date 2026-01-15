@@ -22,7 +22,7 @@ import tech.bytesmind.logistics.auth.api.dto.UserResponse;
 import tech.bytesmind.logistics.auth.application.mapper.UserMapper;
 import tech.bytesmind.logistics.auth.application.service.UserService;
 import tech.bytesmind.logistics.auth.domain.model.User;
-import tech.bytesmind.logistics.auth.domain.policy.UserAccessPolicy;
+import tech.bytesmind.logistics.auth.application.policy.UserAccessPolicy;
 import tech.bytesmind.logistics.shared.security.annotations.RequireRole;
 import tech.bytesmind.logistics.shared.security.service.SecurityContextService;
 
