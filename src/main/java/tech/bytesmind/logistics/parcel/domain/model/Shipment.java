@@ -39,6 +39,36 @@ public class Shipment implements TenantAware {
     @Column(nullable = false, length = 20)
     private ShipmentStatus status = ShipmentStatus.OPEN;
 
+    /**
+     * ID du client qui a créé cet envoi (null si créé par un employé d'agence).
+     */
+    @Column(name = "customer_id")
+    private UUID customerId;
+
+    /**
+     * ID du point de collecte où l'envoi sera validé.
+     */
+    @Column(name = "pickup_location_id")
+    private UUID pickupLocationId;
+
+    /**
+     * ID de l'employé d'agence qui a validé l'envoi.
+     */
+    @Column(name = "validated_by_id")
+    private UUID validatedById;
+
+    /**
+     * Timestamp de la validation.
+     */
+    @Column(name = "validated_at")
+    private Instant validatedAt;
+
+    /**
+     * Raison du rejet (si le statut est REJECTED).
+     */
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
     // Expéditeur
     @Column(name = "sender_name", nullable = false)
     private String senderName;
@@ -141,5 +171,42 @@ public class Shipment implements TenantAware {
     @Override
     public void setAgencyId(UUID agencyId) {
         this.agencyId = agencyId;
+    }
+
+    // Business helpers
+
+    /**
+     * Vérifie si cet envoi a été créé par un client.
+     */
+    public boolean isCustomerCreated() {
+        return customerId != null;
+    }
+
+    /**
+     * Vérifie si cet envoi est en attente de validation.
+     */
+    public boolean isPendingValidation() {
+        return status == ShipmentStatus.PENDING_VALIDATION;
+    }
+
+    /**
+     * Vérifie si cet envoi a été validé.
+     */
+    public boolean isValidated() {
+        return validatedById != null && validatedAt != null;
+    }
+
+    /**
+     * Vérifie si cet envoi a été rejeté.
+     */
+    public boolean isRejected() {
+        return status == ShipmentStatus.REJECTED;
+    }
+
+    /**
+     * Vérifie si cet envoi peut recevoir des colis.
+     */
+    public boolean canAddParcels() {
+        return status == ShipmentStatus.OPEN;
     }
 }

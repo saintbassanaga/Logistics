@@ -48,4 +48,39 @@ public interface ShipmentRepository extends JpaRepository<Shipment, UUID> {
      * Utilisé par ShipmentNumberGenerator pour la génération séquentielle.
      */
     long countByAgencyIdAndShipmentNumberStartingWith(UUID agencyId, String prefix);
+
+    // ==================== Customer Shipment Queries ====================
+
+    /**
+     * Liste les shipments d'un client.
+     */
+    List<Shipment> findByCustomerId(UUID customerId);
+
+    /**
+     * Liste les shipments d'un client avec un statut donné.
+     */
+    List<Shipment> findByCustomerIdAndStatus(UUID customerId, ShipmentStatus status);
+
+    /**
+     * Trouve un shipment par ID et customerId (pour vérification d'accès).
+     */
+    Optional<Shipment> findByIdAndCustomerId(UUID id, UUID customerId);
+
+    /**
+     * Liste les shipments en attente de validation pour un lieu de collecte.
+     */
+    @Query("SELECT s FROM Shipment s WHERE s.pickupLocationId = :locationId AND s.status = 'PENDING_VALIDATION'")
+    List<Shipment> findPendingValidationByLocationId(@Param("locationId") UUID locationId);
+
+    /**
+     * Liste les shipments en attente de validation pour une agence.
+     */
+    @Query("SELECT s FROM Shipment s WHERE s.agencyId = :agencyId AND s.status = 'PENDING_VALIDATION'")
+    List<Shipment> findPendingValidationByAgencyId(@Param("agencyId") UUID agencyId);
+
+    /**
+     * Compte les shipments en attente de validation pour un lieu de collecte.
+     */
+    @Query("SELECT COUNT(s) FROM Shipment s WHERE s.pickupLocationId = :locationId AND s.status = 'PENDING_VALIDATION'")
+    long countPendingValidationByLocationId(@Param("locationId") UUID locationId);
 }

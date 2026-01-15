@@ -30,3 +30,4 @@ public record CreateAgencyRequest(
         @NotNull SubscriptionTier subscriptionTier
 ) {
 }
+

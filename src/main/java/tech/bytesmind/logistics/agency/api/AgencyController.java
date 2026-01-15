@@ -45,18 +45,19 @@ public class AgencyController {
     private final LocationAccessPolicy locationAccessPolicy;
 
     /**
-     * POST /api/agencies
-     * Créer une agence (Platform Admin uniquement).
+     * POST /agencies/register
+     * Register a new agency. The authenticated user becomes AGENCY_ADMIN.
+     * Only CUSTOMER users can register agencies.
      */
-    @PostMapping
-    @RequireActor(ActorType.PLATFORM_ADMIN)
-    public ResponseEntity<AgencyResponse> createAgency(@Valid @RequestBody CreateAgencyRequest request) {
-        log.info("POST /agencies - Creating agency: {}", request.name());
+    @PostMapping("/register")
+    @RequireActor(ActorType.CUSTOMER)
+    public ResponseEntity<AgencyResponse> registerAgency(@Valid @RequestBody CreateAgencyRequest request) {
+        log.info("POST /agencies/register - Registering agency: {}", request.name());
 
         var context = securityContextService.getCurrentSecurityContext();
-        agencyAccessPolicy.validateAccess(context, null); // Validation ABAC
+        UUID userId = context.userId();
 
-        Agency agency = agencyService.createAgency(request);
+        Agency agency = agencyService.createAgency(userId, request);
         AgencyResponse response = agencyMapper.toResponse(agency);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

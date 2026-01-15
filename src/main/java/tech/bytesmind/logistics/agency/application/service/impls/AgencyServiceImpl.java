@@ -18,6 +18,7 @@ import tech.bytesmind.logistics.agency.domain.service.AgencyDomainService;
 import tech.bytesmind.logistics.agency.infrastructure.repository.AgencyRepository;
 import tech.bytesmind.logistics.shared.event.publisher.TransactionalEventPublisher;
 import tech.bytesmind.logistics.shared.exceptions.BusinessException;
+import tech.bytesmind.logistics.shared.security.service.UserPromotionService;
 
 import java.util.List;
 import java.util.UUID;
@@ -32,25 +33,34 @@ public class AgencyServiceImpl implements AgencyService {
     private final AgencyCodeGenerator codeGenerator;
     private final AgencyMapper agencyMapper;
     private final TransactionalEventPublisher eventPublisher;
+    private final UserPromotionService userPromotionService;
 
     public AgencyServiceImpl(
             AgencyRepository agencyRepository,
             AgencyDomainService domainService,
             AgencyCodeGenerator codeGenerator,
             AgencyMapper agencyMapper,
-            TransactionalEventPublisher eventPublisher
+            TransactionalEventPublisher eventPublisher,
+            UserPromotionService userPromotionService
     ) {
         this.agencyRepository = agencyRepository;
         this.domainService = domainService;
         this.codeGenerator = codeGenerator;
         this.agencyMapper = agencyMapper;
         this.eventPublisher = eventPublisher;
+        this.userPromotionService = userPromotionService;
     }
 
     @Override
     @Transactional
-    public Agency createAgency(CreateAgencyRequest request) {
-        log.info("Creating agency: {}", request.name());
+    public Agency createAgency(UUID userId, CreateAgencyRequest request) {
+        log.info("Creating agency: {} by user: {}", request.name(), userId);
+
+        // Validate user can create an agency
+        if (!userPromotionService.canCreateAgency(userId)) {
+            throw new BusinessException("User is not eligible to create an agency. " +
+                    "Only active CUSTOMER users without an existing agency can create agencies.");
+        }
 
         // Vérifier unicité de l'email
         if (agencyRepository.existsByEmail(request.email())) {
@@ -78,6 +88,9 @@ public class AgencyServiceImpl implements AgencyService {
 
         agency = agencyRepository.save(agency);
 
+        // Promote user to AGENCY_ADMIN of this agency
+        userPromotionService.promoteToAgencyAdmin(userId, agency.getId());
+
         // Publier événement
         eventPublisher.publish(new AgencyCreatedEvent(
                 agency.getId(),
@@ -85,7 +98,7 @@ public class AgencyServiceImpl implements AgencyService {
                 agency.getName()
         ));
 
-        log.info("Agency created successfully: {}", agency.getId());
+        log.info("Agency {} created successfully. User {} promoted to AGENCY_ADMIN", agency.getId(), userId);
         return agency;
     }
 

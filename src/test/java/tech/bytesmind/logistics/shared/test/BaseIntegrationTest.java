@@ -5,6 +5,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MockMvcBuilder;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -60,7 +61,7 @@ public abstract class BaseIntegrationTest {
      * MockMvc pour envoyer des requêtes HTTP simulées aux contrôleurs.
      * Permet de tester les endpoints REST sans démarrer un vrai serveur HTTP.
      */
-    protected MockMvc mockMvc;
+    protected MockMvc mockMvc ;
 
     /**
      * Setup exécuté avant chaque test.

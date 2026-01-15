@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
@@ -40,26 +41,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class UserControllerIntegrationTest extends BaseIntegrationTest {
 
-    @Bean
-    ObjectMapper objectMapper() {
-        return new ObjectMapper();
-    }
 
-    private final UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
 
 
-    private final RoleRepository roleRepository;
+    @Autowired
+    private  RoleRepository roleRepository;
 
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
 
     private UUID testAgencyId;
-
-    public UserControllerIntegrationTest(UserRepository userRepository, RoleRepository roleRepository, ObjectMapper objectMapper, UUID testAgencyId) {
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.objectMapper = objectMapper;
-        this.testAgencyId = testAgencyId;
-    }
 
     @BeforeEach
     @Override

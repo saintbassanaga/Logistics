@@ -73,4 +73,8 @@ Role {
     public boolean isAgencyScope() {
         return scope == RoleScope.AGENCY;
     }
+
+    public boolean isCustomerScope() {
+        return scope == RoleScope.CUSTOMER;
+    }
 }

@@ -6,24 +6,22 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Événement émis lors de l'assignation d'un rôle à un utilisateur.
+ * Événement émis lors du changement de mot de passe d'un utilisateur.
  */
-public record RoleAssignedEvent(
+public record PasswordChangedEvent(
         UUID eventId,
         Instant occurredAt,
         UUID agencyId,
         UUID userId,
-        UUID roleId,
-        String roleCode
+        String email
 ) implements DomainEvent {
 
-    public RoleAssignedEvent(UUID userId, UUID roleId, String roleCode, UUID agencyId) {
-        this(UUID.randomUUID(), Instant.now(), agencyId, userId, roleId, roleCode);
+    public PasswordChangedEvent(UUID userId, String email) {
+        this(UUID.randomUUID(), Instant.now(), null, userId, email);
     }
-
 
     @Override
     public String eventType() {
-        return "RoleAssigned";
+        return "PasswordChanged";
     }
 }

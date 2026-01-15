@@ -110,4 +110,83 @@ public class ShipmentDomainService {
         String random = String.valueOf((int) (Math.random() * 10000));
         return String.format("SHP-%s-%s-%s", agencyCode, timestamp, random);
     }
+
+    // ==================== Customer Shipment Methods ====================
+
+    /**
+     * Initialise un envoi créé par un client.
+     * L'envoi est créé avec le statut PENDING_VALIDATION.
+     */
+    public void initializeCustomerShipment(Shipment shipment, java.util.UUID customerId, java.util.UUID pickupLocationId) {
+        shipment.setCustomerId(customerId);
+        shipment.setPickupLocationId(pickupLocationId);
+        shipment.setStatus(ShipmentStatus.PENDING_VALIDATION);
+    }
+
+    /**
+     * Valide un envoi créé par un client.
+     * Transition : PENDING_VALIDATION → OPEN.
+     */
+    public void validateCustomerShipment(Shipment shipment, java.util.UUID validatorId) {
+        if (shipment.getStatus() != ShipmentStatus.PENDING_VALIDATION) {
+            throw new BusinessException("Only PENDING_VALIDATION shipments can be validated");
+        }
+
+        if (!shipment.isCustomerCreated()) {
+            throw new BusinessException("This shipment was not created by a customer");
+        }
+
+        shipment.setStatus(ShipmentStatus.OPEN);
+        shipment.setValidatedById(validatorId);
+        shipment.setValidatedAt(Instant.now());
+    }
+
+    /**
+     * Rejette un envoi créé par un client.
+     * Transition : PENDING_VALIDATION → REJECTED.
+     */
+    public void rejectCustomerShipment(Shipment shipment, java.util.UUID rejectedById, String reason) {
+        if (shipment.getStatus() != ShipmentStatus.PENDING_VALIDATION) {
+            throw new BusinessException("Only PENDING_VALIDATION shipments can be rejected");
+        }
+
+        if (!shipment.isCustomerCreated()) {
+            throw new BusinessException("This shipment was not created by a customer");
+        }
+
+        if (reason == null || reason.isBlank()) {
+            throw new BusinessException("Rejection reason is required");
+        }
+
+        shipment.setStatus(ShipmentStatus.REJECTED);
+        shipment.setValidatedById(rejectedById);
+        shipment.setValidatedAt(Instant.now());
+        shipment.setRejectionReason(reason);
+    }
+
+    /**
+     * Vérifie si un envoi est en attente de validation.
+     */
+    public boolean isPendingValidation(Shipment shipment) {
+        return shipment.getStatus() == ShipmentStatus.PENDING_VALIDATION;
+    }
+
+    /**
+     * Valide qu'un envoi peut être modifié par le client.
+     * Seuls les envois PENDING_VALIDATION peuvent être modifiés par le client.
+     */
+    public void validateCustomerCanModify(Shipment shipment) {
+        if (shipment.getStatus() != ShipmentStatus.PENDING_VALIDATION) {
+            throw new BusinessException("Customer can only modify PENDING_VALIDATION shipments");
+        }
+    }
+
+    /**
+     * Valide qu'un envoi peut être annulé par le client.
+     */
+    public void validateCustomerCanCancel(Shipment shipment) {
+        if (shipment.getStatus() != ShipmentStatus.PENDING_VALIDATION) {
+            throw new BusinessException("Customer can only cancel PENDING_VALIDATION shipments");
+        }
+    }
 }

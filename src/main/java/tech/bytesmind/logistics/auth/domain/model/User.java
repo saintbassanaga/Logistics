@@ -68,6 +68,20 @@ public class User implements TenantAware {
     private String externalAuthId;
 
     /**
+     * Nom d'utilisateur unique pour l'authentification locale.
+     * Format: alphanumeric, underscores, hyphens, 3-50 caractères.
+     */
+    @Column(unique = true, length = 50)
+    private String username;
+
+    /**
+     * Hash BCrypt du mot de passe pour l'authentification locale.
+     * Optionnel si l'utilisateur utilise uniquement OAuth externe.
+     */
+    @Column(name = "password_hash")
+    private String passwordHash;
+
+    /**
      * Titre/fonction (pour AGENCY_EMPLOYEE).
      */
     @Column(name = "job_title", length = 100)

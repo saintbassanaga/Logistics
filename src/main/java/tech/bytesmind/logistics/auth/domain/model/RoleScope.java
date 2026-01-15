@@ -14,5 +14,11 @@ public enum RoleScope {
      * Rôle plateforme (ex: PLATFORM_ADMIN).
      * Assigné aux PLATFORM_ADMIN.
      */
-    PLATFORM
+    PLATFORM,
+
+    /**
+     * Rôle client (ex: USER).
+     * Assigné aux CUSTOMER.
+     */
+    CUSTOMER
 }

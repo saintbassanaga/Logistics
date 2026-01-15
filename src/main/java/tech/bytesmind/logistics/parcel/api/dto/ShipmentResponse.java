@@ -12,6 +12,15 @@ public record ShipmentResponse(
         UUID agencyId,
         String shipmentNumber,
         ShipmentStatus status,
+
+        // Customer tracking
+        UUID customerId,
+        UUID pickupLocationId,
+        UUID validatedById,
+        Instant validatedAt,
+        String rejectionReason,
+
+        // Sender
         String senderName,
         String senderPhone,
         String senderEmail,
@@ -20,6 +29,8 @@ public record ShipmentResponse(
         String senderCity,
         String senderPostalCode,
         String senderCountry,
+
+        // Receiver
         String receiverName,
         String receiverPhone,
         String receiverEmail,
@@ -28,10 +39,14 @@ public record ShipmentResponse(
         String receiverCity,
         String receiverPostalCode,
         String receiverCountry,
+
+        // Commercial
         BigDecimal totalWeight,
         BigDecimal declaredValue,
         String currency,
         String notes,
+
+        // Metadata
         int parcelCount,
         Instant createdAt,
         Instant updatedAt,

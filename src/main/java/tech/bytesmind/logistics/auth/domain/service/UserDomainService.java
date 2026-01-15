@@ -98,6 +98,12 @@ public class UserDomainService {
             );
         }
 
+        if (role.getScope() == RoleScope.CUSTOMER && user.getActorType() != ActorType.CUSTOMER) {
+            throw new BusinessException(
+                    "CUSTOMER-scoped roles can only be assigned to CUSTOMER"
+            );
+        }
+
         if (!role.isActive()) {
             throw new BusinessException("Cannot assign inactive role");
         }
@@ -107,6 +113,43 @@ public class UserDomainService {
         }
 
         user.getRoles().add(role);
+    }
+
+    /**
+     * Valide le format d'un nom d'utilisateur.
+     */
+    public void validateUsername(String username) {
+        if (username == null || username.isBlank()) {
+            throw new BusinessException("Username is required");
+        }
+
+        if (username.length() < 3 || username.length() > 50) {
+            throw new BusinessException("Username must be between 3 and 50 characters");
+        }
+
+        if (!username.matches("^[a-zA-Z0-9_-]+$")) {
+            throw new BusinessException("Username can only contain letters, numbers, underscores and hyphens");
+        }
+    }
+
+    /**
+     * Valide qu'un utilisateur peut mettre à jour son mot de passe.
+     */
+    public void validateCanUpdatePassword(User user) {
+        if (!user.isActive()) {
+            throw new BusinessException("Cannot update password for inactive account");
+        }
+    }
+
+    /**
+     * Initialise un nouvel utilisateur pour l'inscription (self-registration).
+     * L'utilisateur est créé en tant que CUSTOMER avec le rôle USER par défaut.
+     */
+    public void initializeForRegistration(User user) {
+        user.setActorType(ActorType.CUSTOMER);
+        user.setAgencyId(null);
+        user.setActive(true);
+        user.setEmailVerified(false); // Nécessite vérification email
     }
 
     /**

@@ -1,27 +1,23 @@
 package tech.bytesmind.logistics.auth.api.dto;
 
-import tech.bytesmind.logistics.shared.security.model.ActorType;
-
 import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
-public record UserResponse(
+/**
+ * DTO de réponse après inscription d'un utilisateur.
+ */
+public record UserRegistrationResponse(
         UUID id,
         String username,
         String email,
         String firstName,
         String lastName,
         String phone,
-        ActorType actorType,
-        UUID agencyId,
-        String jobTitle,
-        String department,
+        String actorType,
+        Set<String> roles,
         boolean active,
         boolean emailVerified,
-        Set<String> roles,
-        Instant createdAt,
-        Instant updatedAt,
-        Instant lastLoginAt
+        Instant createdAt
 ) {
 }
