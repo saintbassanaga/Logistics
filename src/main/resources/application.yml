@@ -79,6 +79,9 @@ springdoc:
     path: /api-docs
     enabled: true
   swagger-ui:
+    oauth:
+      client-id: logistics-frontend
+      use-pkce-with-authorization-code-grant: true
     path: /swagger-ui.html
     enabled: true
     operations-sorter: method
