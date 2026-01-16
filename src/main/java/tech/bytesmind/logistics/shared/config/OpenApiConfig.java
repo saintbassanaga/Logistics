@@ -24,9 +24,14 @@ public class OpenApiConfig {
 
     @Bean
     public OpenAPI logisticsOpenAPI() {
-        // Base URLs for OIDC endpoints derived from issuer-uri
         String authUrl = issuerUri + "/protocol/openid-connect/auth";
         String tokenUrl = issuerUri + "/protocol/openid-connect/token";
+
+        // Define Scopes (Mandatory for Swagger to pass the token)
+        io.swagger.v3.oas.models.security.Scopes scopes = new io.swagger.v3.oas.models.security.Scopes()
+                .addString("openid", "OpenID Connect login")
+                .addString("profile", "User profile information")
+                .addString("email", "User email address");
 
         return new OpenAPI()
                 .info(apiInfo())
@@ -43,6 +48,7 @@ public class OpenApiConfig {
                                         .authorizationCode(new OAuthFlow()
                                                 .authorizationUrl(authUrl)
                                                 .tokenUrl(tokenUrl)
+                                                .scopes(scopes) // ADD THIS LINE
                                         )
                                 )
                         )

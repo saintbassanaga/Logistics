@@ -75,18 +75,10 @@ management:
       show-details: when-authorized
 
 springdoc:
-  api-docs:
-    path: /api-docs
-    enabled: true
   swagger-ui:
     oauth:
       client-id: logistics-frontend
+      # PKCE is mandatory for public clients in 2026
       use-pkce-with-authorization-code-grant: true
-    path: /swagger-ui.html
-    enabled: true
-    operations-sorter: method
-    tags-sorter: alpha
-    disable-swagger-default-url: true
-  show-actuator: false
-  paths-to-match: /**
-  packages-to-scan: tech.bytesmind.logistics
+    # Use the absolute URL that matches your Keycloak whitelist exactly
+    oauth2-redirect-url: http://localhost:8081/swagger-ui/oauth2-redirect.html
