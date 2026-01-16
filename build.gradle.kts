@@ -23,6 +23,7 @@ configurations {
 extra["mapstructVersion"] = "1.6.3"
 extra["archunitVersion"] = "1.3.0"
 extra["testcontainersVersion"] = "1.20.4"
+extra["keycloakVersion"] = "26.0.8"
 
 repositories {
 	mavenCentral()
@@ -39,6 +40,13 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-flyway")
+
+	// Keycloak Admin Client
+	implementation("org.keycloak:keycloak-admin-client:${property("keycloakVersion")}")
+	implementation("org.keycloak:keycloak-core:${property("keycloakVersion")}")
+
+	// HTTP Client for Keycloak
+	implementation("org.apache.httpcomponents.client5:httpclient5:5.2.1")
 
 	// Database
 	runtimeOnly("org.postgresql:postgresql")

@@ -69,4 +69,15 @@ public class GlobalExceptionHandler {
         problem.setTitle("Internal Server Error");
         return problem;
     }
+
+    @ExceptionHandler(KeycloakAdminException.class)
+    public ProblemDetail handleKeyCloakAdminException(Exception ex) {
+        log.warn("KeyCloak exception: {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                ex.getMessage()
+        );
+        problem.setTitle("Keycloak Error");
+        return problem;
+    }
 }
