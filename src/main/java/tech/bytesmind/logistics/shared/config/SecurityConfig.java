@@ -75,13 +75,7 @@ public class SecurityConfig {
                         oauth2.jwt(jwt ->
                                 jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
                         )
-                );
-
-        // 🔐 IMPORTANT : filtre tenant APRÈS le JWT
-        http.addFilterAfter(
-                tenantContextFilter,
-                BearerTokenAuthenticationFilter.class
-        );
+                )                .addFilterAfter(tenantContextFilter, BearerTokenAuthenticationFilter.class);
 
         return http.build();
     }
