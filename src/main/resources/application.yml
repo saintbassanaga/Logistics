@@ -6,7 +6,7 @@ spring:
     active: local
 
   datasource:
-    url: ${DATASOURCE_URL:jdbc:postgresql://localhost:5434/logistics}
+    url: ${DATASOURCE_URL:jdbc:postgresql://localhost:5433/logistics}
     username: ${POSTGRES_USER:transport_user}
     password: ${POSTGRES_PASSWORD:transport_dev_password_12345}
     driver-class-name: org.postgresql.Driver
@@ -34,25 +34,32 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration
 
+  # Spring Security: Resource Server validates tokens issued by our own AS
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8080/realms/logistics}
-          jwk-set-uri: ${JWT_JWK_SET_URI:http://localhost:8080/realms/logistics/protocol/openid-connect/certs}
+          issuer-uri: ${APP_ISSUER_URI:http://localhost:8081}
+          # jwk-set-uri is NOT needed — JwtDecoder is provided directly from the
+          # in-memory JWKSource bean, avoiding the chicken-and-egg startup issue.
+
   web:
     error:
       include-message: always
       include-binding-errors: always
 
-keycloak:
-  admin:
-    server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8080}
-    admin-realm: ${KEYCLOAK_ADMIN_REALM:master}
-    client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:admin-cli-client}
-    client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:adminsecret}
-    target-realm: ${KEYCLOAK_TARGET_REALM:logistics}
-    connection-pool-size: 10
+# Spring Authorization Server settings
+app:
+  security:
+    issuer: ${APP_ISSUER_URI:http://localhost:8081}
+    # Keystore for RSA signing keys (leave empty to generate ephemeral key — dev only)
+    keystore:
+      path: ${KEY_STORE_PATH:}
+      password: ${KEY_STORE_PASSWORD:}
+      alias: ${KEY_STORE_ALIAS:logistics-signing-key}
+    # Initial secret for the logistics-service client (change in production)
+    service-client:
+      secret: ${SERVICE_CLIENT_SECRET:logistics-service-secret-change-in-prod}
 
 server:
   port: ${SERVER_PORT:8081}
@@ -60,10 +67,10 @@ server:
 logging:
   level:
     root: INFO
-    com.transport.platform: DEBUG
+    tech.bytesmind.logistics: DEBUG
     org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
     org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
 management:
   endpoints:
@@ -77,8 +84,6 @@ management:
 springdoc:
   swagger-ui:
     oauth:
-      client-id: logistics-frontend
-      # PKCE is mandatory for public clients in 2026
+      client-id: logistics-angular
       use-pkce-with-authorization-code-grant: true
-    # Use the absolute URL that matches your Keycloak whitelist exactly
     oauth2-redirect-url: http://localhost:8081/swagger-ui/oauth2-redirect.html

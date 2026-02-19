@@ -22,7 +22,7 @@ import java.util.UUID;
  * - PLATFORM_ADMIN : agencyId doit être null
  * - CUSTOMER : agencyId doit être null
  * <p>
- * Note: L'authentification se fait via JWT OAuth2 externe (Keycloak).
+ * Note: L'authentification se fait via le Spring OAuth2 Authorization Server embarqué.
  * Cette entité alimente les claims JWT (sub, actor_type, agency_id, roles).
  */
 @Setter
@@ -61,8 +61,8 @@ public class User implements TenantAware {
     private UUID agencyId;
 
     /**
-     * Identifiant externe dans le système OAuth (Keycloak).
-     * Correspond au claim 'sub' du JWT.
+     * Identifiant externe (optionnel) pour les utilisateurs migrés depuis un fournisseur OAuth externe.
+     * Pour les utilisateurs locaux Spring AS, cette valeur est null — le claim 'sub' du JWT = user.id.
      */
     @Column(name = "external_auth_id", unique = true)
     private String externalAuthId;

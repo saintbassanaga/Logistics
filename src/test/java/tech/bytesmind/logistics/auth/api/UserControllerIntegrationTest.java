@@ -85,8 +85,8 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
                 "Operations", null
         );
 
-        // When: POST /users
-        ResultActions result = mockMvc.perform(post("/users")
+        // When: POST /admin/users
+        ResultActions result = mockMvc.perform(post("/admin/users")
                 .with(jwt().jwt(jwt -> jwt
                         .claim("sub", UUID.randomUUID().toString())
                         .claim("actor_type", "PLATFORM_ADMIN")
@@ -122,8 +122,8 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
                 null, null
         );
 
-        // When: POST /users
-        ResultActions result = mockMvc.perform(post("/users")
+        // When: POST /admin/users
+        ResultActions result = mockMvc.perform(post("/admin/users")
                 .with(jwt().jwt(jwt -> jwt
                         .claim("sub", UUID.randomUUID().toString())
                         .claim("actor_type", "PLATFORM_ADMIN")
@@ -150,8 +150,8 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         user.setActive(true);
         user = userRepository.save(user);
 
-        // When: GET /users/{id} par un PLATFORM_ADMIN
-        ResultActions result = mockMvc.perform(get("/users/{id}", user.getId())
+        // When: GET /admin/users/{id} par un PLATFORM_ADMIN
+        ResultActions result = mockMvc.perform(get("/admin/users/{id}", user.getId())
                 .with(jwt().jwt(jwt -> jwt
                         .claim("sub", UUID.randomUUID().toString())
                         .claim("actor_type", "PLATFORM_ADMIN")
@@ -181,7 +181,7 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
 
         UUID agencyB = UUID.randomUUID();
         UUID employeeBId = UUID.randomUUID();
-        ResultActions result = mockMvc.perform(get("/users/{id}", userA.getId())
+        ResultActions result = mockMvc.perform(get("/admin/users/{id}", userA.getId())
                 .with(jwt().jwt(jwt -> jwt
                         .claim("sub", employeeBId.toString())
                         .claim("actor_type", "AGENCY_EMPLOYEE")
@@ -207,9 +207,9 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         currentUser.setActive(true);
         currentUser = userRepository.save(currentUser);
 
-        // When: GET /users/me
+        // When: GET /admin/users/me
         User finalCurrentUser = currentUser;
-        ResultActions result = mockMvc.perform(get("/users/me")
+        ResultActions result = mockMvc.perform(get("/admin/users/me")
                 .with(jwt().jwt(jwt -> jwt
                         .claim("sub", finalCurrentUser.getId().toString())
                         .claim("actor_type", "AGENCY_EMPLOYEE")
@@ -239,8 +239,8 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
                 null, null
         );
 
-        // When: POST /users sans authentification
-        ResultActions result = mockMvc.perform(post("/users")
+        // When: POST /admin/users sans authentification
+        ResultActions result = mockMvc.perform(post("/admin/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)));
 

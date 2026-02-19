@@ -41,8 +41,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${JWT_ISSUER_URI:?JWT_ISSUER_URI is required}
-          jwk-set-uri: ${JWT_JWK_SET_URI:?JWT_JWK_SET_URI is required}
+          issuer-uri: ${APP_ISSUER_URI:?APP_ISSUER_URI is required}
 
   web:
     error:
@@ -50,6 +49,18 @@ spring:
       include-binding-errors: never
       include-stacktrace: never
       include-exception: false
+
+# Spring Authorization Server — production settings
+app:
+  security:
+    issuer: ${APP_ISSUER_URI:?APP_ISSUER_URI is required}
+    keystore:
+      # Path to PKCS12 keystore (classpath: or absolute file path)
+      path: ${KEY_STORE_PATH:?KEY_STORE_PATH is required in production}
+      password: ${KEY_STORE_PASSWORD:?KEY_STORE_PASSWORD is required}
+      alias: ${KEY_STORE_ALIAS:logistics-signing-key}
+    service-client:
+      secret: ${SERVICE_CLIENT_SECRET:?SERVICE_CLIENT_SECRET is required}
 
 server:
   port: ${SERVER_PORT:8081}
@@ -73,7 +84,6 @@ logging:
     tech.bytesmind.logistics: INFO
     org.springframework.security: WARN
     org.hibernate.SQL: WARN
-    org.hibernate.type.descriptor.sql.BasicBinder: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

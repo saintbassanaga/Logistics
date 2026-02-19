@@ -17,20 +17,20 @@ import java.util.UUID;
 /**
  * Service permettant d'extraire et de fournir le contexte de sécurité courant
  * basé sur le JSON Web Token (JWT) présent dans le contexte de sécurité Spring.
- *
+ * <p>
  * Cette classe est utilisée pour garantir que les informations d'authentification
  * ainsi que les permissions de l'utilisateur courant peuvent être extraites
  * en toute sécurité et sous une forme normalisée.
- *
+ * <p>
  * Responsabilités principales :
  * - Extraction et interprétation des claims présents dans le JWT.
  * - Validation des claims essentiels tels que 'sub', 'actor_type', et 'roles'.
  * - Gestion des rôles et des associations spécifiques, comme les agences.
- *
+ * <p>
  * Principales exceptions :
  * - SecurityViolationException : levée en cas d'absence ou d'imprécision dans
  *   les claims exigés par la logique applicative.
- *
+ * <p>
  * Contexte d'utilisation :
  * - Extraction du contexte de sécurité enrichi pour des besoins métiers.
  * - Interprétation des rôles et des relations d'appartenance pour les agences.

@@ -16,39 +16,51 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
+/**
+ * OpenAPI / Swagger UI configuration.
+ *
+ * <p>OAuth2 flows point to the embedded Spring Authorization Server endpoints:
+ * <ul>
+ *   <li>Authorization: {@code {issuer}/oauth2/authorize}</li>
+ *   <li>Token: {@code {issuer}/oauth2/token}</li>
+ * </ul>
+ *
+ * <p>PKCE is enabled for the Swagger UI client ({@code logistics-angular}).
+ */
 @Configuration
 public class OpenApiConfig {
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    @Value("${app.security.issuer:http://localhost:8081}")
     private String issuerUri;
 
     @Bean
     public OpenAPI logisticsOpenAPI() {
-        String authUrl = issuerUri + "/protocol/openid-connect/auth";
-        String tokenUrl = issuerUri + "/protocol/openid-connect/token";
+        // Spring Authorization Server endpoint paths
+        String authUrl  = issuerUri + "/oauth2/authorize";
+        String tokenUrl = issuerUri + "/oauth2/token";
 
-        // Define Scopes (Mandatory for Swagger to pass the token)
-        io.swagger.v3.oas.models.security.Scopes scopes = new io.swagger.v3.oas.models.security.Scopes()
-                .addString("openid", "OpenID Connect login")
-                .addString("profile", "User profile information")
-                .addString("email", "User email address");
+        io.swagger.v3.oas.models.security.Scopes scopes =
+                new io.swagger.v3.oas.models.security.Scopes()
+                        .addString("openid",  "OpenID Connect login")
+                        .addString("profile", "User profile information")
+                        .addString("email",   "User email address");
 
         return new OpenAPI()
                 .info(apiInfo())
                 .servers(List.of(
-                        new Server().url("http://localhost:8081").description("Local development server"),
-                        new Server().url("https://api.logistics.example.com").description("Production server")
+                        new Server().url("http://localhost:8081").description("Local development"),
+                        new Server().url("https://api.logistics.example.com").description("Production")
                 ))
-                .addSecurityItem(new SecurityRequirement().addList("keycloak-oauth"))
+                .addSecurityItem(new SecurityRequirement().addList("oauth2"))
                 .components(new Components()
-                        .addSecuritySchemes("keycloak-oauth", new SecurityScheme()
+                        .addSecuritySchemes("oauth2", new SecurityScheme()
                                 .type(SecurityScheme.Type.OAUTH2)
-                                .description("Keycloak OpenID Connect Authentication")
+                                .description("Spring Authorization Server — OAuth2 / OIDC")
                                 .flows(new OAuthFlows()
                                         .authorizationCode(new OAuthFlow()
                                                 .authorizationUrl(authUrl)
                                                 .tokenUrl(tokenUrl)
-                                                .scopes(scopes) // ADD THIS LINE
+                                                .scopes(scopes)
                                         )
                                 )
                         )
@@ -59,19 +71,23 @@ public class OpenApiConfig {
         return new Info()
                 .title("Logistics Platform API")
                 .description("""
-                        **Logistics Platform REST API Documentation**
-                        
-                        ## Authentication (2026 Standards)
-                        This API is secured via **Keycloak**. 
-                        - Click the **Authorize** button below.
-                        - Use Client ID: `logistics-frontend` (Public) or `logistics-backend` (with secret).
-                        - **PKCE** is enabled and handled automatically by Swagger UI.
-                        
+                        **Logistics Platform REST API**
+
+                        ## Authentication
+                        Secured via the embedded **Spring OAuth2 Authorization Server**.
+
+                        Click **Authorize**, select scopes (`openid profile email`),
+                        and use client ID `logistics-angular` (PKCE is handled automatically by Swagger UI).
+
                         ## Multi-Tenancy
-                        Strict isolation via `agency_id` claim in JWT.
+                        Strict tenant isolation via the `agency_id` JWT claim.
                         """)
-                .version("1.0.0")
-                .contact(new Contact().name("Logistics Platform Team").email("api@logistics.example.com"))
-                .license(new License().name("Apache 2.0").url("https://www.apache.org/licenses/LICENSE-2.0"));
+                .version("2.0.0")
+                .contact(new Contact()
+                        .name("Logistics Platform Team")
+                        .email("api@logistics.example.com"))
+                .license(new License()
+                        .name("Apache 2.0")
+                        .url("https://www.apache.org/licenses/LICENSE-2.0"));
     }
 }
