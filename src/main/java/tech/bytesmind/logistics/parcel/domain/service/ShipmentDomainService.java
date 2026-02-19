@@ -1,7 +1,6 @@
 package tech.bytesmind.logistics.parcel.domain.service;
 
 import org.springframework.stereotype.Service;
-import tech.bytesmind.logistics.parcel.domain.model.Parcel;
 import tech.bytesmind.logistics.parcel.domain.model.Shipment;
 import tech.bytesmind.logistics.parcel.domain.model.ShipmentStatus;
 import tech.bytesmind.logistics.shared.exceptions.BusinessException;
@@ -131,11 +130,9 @@ public class ShipmentDomainService {
         if (shipment.getStatus() != ShipmentStatus.PENDING_VALIDATION) {
             throw new BusinessException("Only PENDING_VALIDATION shipments can be validated");
         }
-
-        if (!shipment.isCustomerCreated()) {
+        if (shipment.isCustomerCreated()) {
             throw new BusinessException("This shipment was not created by a customer");
         }
-
         shipment.setStatus(ShipmentStatus.OPEN);
         shipment.setValidatedById(validatorId);
         shipment.setValidatedAt(Instant.now());
@@ -150,7 +147,7 @@ public class ShipmentDomainService {
             throw new BusinessException("Only PENDING_VALIDATION shipments can be rejected");
         }
 
-        if (!shipment.isCustomerCreated()) {
+        if (shipment.isCustomerCreated()) {
             throw new BusinessException("This shipment was not created by a customer");
         }
 

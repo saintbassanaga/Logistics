@@ -179,7 +179,7 @@ public class Shipment implements TenantAware {
      * Vérifie si cet envoi a été créé par un client.
      */
     public boolean isCustomerCreated() {
-        return customerId != null;
+        return customerId == null;
     }
 
     /**

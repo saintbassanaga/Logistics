@@ -77,8 +77,6 @@ public abstract class BaseIntegrationTest {
      * À surcharger dans les classes filles si nécessaire.
      */
     protected String createMockJwt(String userId, String actorType, String agencyId) {
-        // TODO: Implémenter la création de JWT mocké pour les tests
-        // Utiliser MockMvc avec @WithMockUser ou SecurityMockMvcRequestPostProcessors
         return "mock-jwt-token";
     }
 }

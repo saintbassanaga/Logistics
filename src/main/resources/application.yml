@@ -84,6 +84,6 @@ management:
 springdoc:
   swagger-ui:
     oauth:
-      client-id: logistics-angular
-      use-pkce-with-authorization-code-grant: true
-    oauth2-redirect-url: http://localhost:8081/swagger-ui/oauth2-redirect.html
+      client-id: "logistics-service"
+      client-secret: "logistics-service-secret-change-in-prod"
+    urls-primary-name: http://localhost:8081

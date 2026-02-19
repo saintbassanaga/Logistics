@@ -4,90 +4,164 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.info.License;
-import io.swagger.v3.oas.models.security.OAuthFlow;
-import io.swagger.v3.oas.models.security.OAuthFlows;
-import io.swagger.v3.oas.models.security.SecurityRequirement;
-import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.MediaType;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.responses.ApiResponse;
+import io.swagger.v3.oas.models.security.*;
 import io.swagger.v3.oas.models.servers.Server;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.Data;
+import org.springdoc.core.customizers.OpenApiCustomizer;
+import org.springdoc.core.models.GroupedOpenApi;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
- * OpenAPI / Swagger UI configuration.
- *
- * <p>OAuth2 flows point to the embedded Spring Authorization Server endpoints:
- * <ul>
- *   <li>Authorization: {@code {issuer}/oauth2/authorize}</li>
- *   <li>Token: {@code {issuer}/oauth2/token}</li>
- * </ul>
- *
- * <p>PKCE is enabled for the Swagger UI client ({@code logistics-angular}).
+ * Enterprise Logistics Orchestration OpenAPI Specification.
+ * Implements OIDC Discovery, Global RFC-7807 Error Handlers, and Multi-Tenant Server Routing.
  */
 @Configuration
 public class OpenApiConfig {
 
-    @Value("${app.security.issuer:http://localhost:8081}")
-    private String issuerUri;
+    private static final String OIDC_SCHEME = "openIdConnect";
+    private static final String BEARER_SCHEME = "bearer-jwt";
 
     @Bean
-    public OpenAPI logisticsOpenAPI() {
-        // Spring Authorization Server endpoint paths
-        String authUrl  = issuerUri + "/oauth2/authorize";
-        String tokenUrl = issuerUri + "/oauth2/token";
-
-        io.swagger.v3.oas.models.security.Scopes scopes =
-                new io.swagger.v3.oas.models.security.Scopes()
-                        .addString("openid",  "OpenID Connect login")
-                        .addString("profile", "User profile information")
-                        .addString("email",   "User email address");
-
+    public OpenAPI logisticsOpenAPI(OpenApiSettings settings) {
         return new OpenAPI()
-                .info(apiInfo())
-                .servers(List.of(
-                        new Server().url("http://localhost:8081").description("Local development"),
-                        new Server().url("https://api.logistics.example.com").description("Production")
-                ))
-                .addSecurityItem(new SecurityRequirement().addList("oauth2"))
+                .info(createApiInfo(settings))
+                .servers(configureServers(settings))
+                .addSecurityItem(new SecurityRequirement()
+                        .addList(OIDC_SCHEME)
+                        .addList(BEARER_SCHEME))
                 .components(new Components()
-                        .addSecuritySchemes("oauth2", new SecurityScheme()
-                                .type(SecurityScheme.Type.OAUTH2)
-                                .description("Spring Authorization Server — OAuth2 / OIDC")
-                                .flows(new OAuthFlows()
-                                        .authorizationCode(new OAuthFlow()
-                                                .authorizationUrl(authUrl)
-                                                .tokenUrl(tokenUrl)
-                                                .scopes(scopes)
-                                        )
-                                )
-                        )
-                );
+                        .addSecuritySchemes(OIDC_SCHEME, createOidcScheme(settings))
+                        .addSecuritySchemes(BEARER_SCHEME, createJwtScheme())
+                        // Pre-defining global reusable schemas
+                        .addSchemas("ProblemDetail", new Schema<>()
+                                .type("object")
+                                .description("RFC-7807 Compliant Error Response")
+                                .properties(Map.of(
+                                        "status", new Schema<>().type("integer"),
+                                        "title", new Schema<>().type("string"),
+                                        "detail", new Schema<>().type("string"),
+                                        "instance", new Schema<>().type("string")
+                                ))));
     }
 
-    private Info apiInfo() {
+    // =========================================================================
+    // DOMAIN-DRIVEN API GROUPS
+    // =========================================================================
+
+    @Bean
+    public GroupedOpenApi platformAdminApi() {
+        return createGroup("1-platform-admin", "Platform Admin", "/admin/**", "/agencies/*/status");
+    }
+
+    @Bean
+    public GroupedOpenApi agencyApi() {
+        return GroupedOpenApi.builder()
+                .group("2-agency-operations")
+                .pathsToMatch("/shipments/**", "/parcels/**", "/agencies/**")
+                .pathsToExclude("/admin/**", "/customer/**", "/agencies/register")
+                .addOpenApiCustomizer(globalResponseCustomizer())
+                .build();
+    }
+
+    // =========================================================================
+    // SECURITY & PROTOCOL FACTORIES
+    // =========================================================================
+
+    private SecurityScheme createOidcScheme(OpenApiSettings settings) {
+        return new SecurityScheme()
+                .type(SecurityScheme.Type.OPENIDCONNECT)
+                .openIdConnectUrl(settings.getIssuerUri() + "/.well-known/openid-configuration")
+                .description("OIDC Discovery for Identity Providers (Okta/Keycloak)");
+    }
+
+    private SecurityScheme createJwtScheme() {
+        return new SecurityScheme()
+                .type(SecurityScheme.Type.HTTP)
+                .scheme("bearer")
+                .bearerFormat("JWT");
+    }
+
+    // =========================================================================
+    // ENHANCED CUSTOMIZERS (RFC-7807 Compliance)
+    // =========================================================================
+
+    @Bean
+    public OpenApiCustomizer globalResponseCustomizer() {
+        return openApi -> openApi.getPaths().values().forEach(pathItem ->
+                pathItem.readOperations().forEach(operation -> {
+                    var responses = operation.getResponses();
+
+                    // Unified Error Handling Mapping
+                    responses.addApiResponse("401", createErrorResponse("Unauthorized - Invalid Credentials"));
+                    responses.addApiResponse("403", createErrorResponse("Forbidden - Insufficient Scope"));
+                    responses.addApiResponse("500", createErrorResponse("Internal Server Error - Trace ID Required"));
+                })
+        );
+    }
+
+    private ApiResponse createErrorResponse(String description) {
+        return new ApiResponse()
+                .description(description)
+                .content(new Content().addMediaType("application/problem+json",
+                        new MediaType().schema(new Schema<>().$ref("#/components/schemas/ProblemDetail"))));
+    }
+
+    // =========================================================================
+    // HELPERS & CONFIGURATION
+    // =========================================================================
+
+    private Info createApiInfo(OpenApiSettings s) {
         return new Info()
-                .title("Logistics Platform API")
-                .description("""
-                        **Logistics Platform REST API**
+                .title(s.getTitle())
+                .description(s.getDescription())
+                .version(s.getVersion())
+                .contact(new Contact().name("Core Engineering").email(s.getContactEmail()));
+    }
 
-                        ## Authentication
-                        Secured via the embedded **Spring OAuth2 Authorization Server**.
+    private List<Server> configureServers(OpenApiSettings settings) {
+        if (settings.getServers().isEmpty()) {
+            return List.of(new Server().url("/").description("Default Gateway"));
+        }
+        return settings.getServers().stream()
+                .map(s -> new Server().url(s.getUrl()).description(s.getDescription()))
+                .toList();
+    }
 
-                        Click **Authorize**, select scopes (`openid profile email`),
-                        and use client ID `logistics-angular` (PKCE is handled automatically by Swagger UI).
+    private GroupedOpenApi createGroup(String name, String displayName, String... paths) {
+        return GroupedOpenApi.builder()
+                .group(name)
+                .displayName(displayName)
+                .pathsToMatch(paths)
+                .addOpenApiCustomizer(globalResponseCustomizer())
+                .build();
+    }
 
-                        ## Multi-Tenancy
-                        Strict tenant isolation via the `agency_id` JWT claim.
-                        """)
-                .version("2.0.0")
-                .contact(new Contact()
-                        .name("Logistics Platform Team")
-                        .email("api@logistics.example.com"))
-                .license(new License()
-                        .name("Apache 2.0")
-                        .url("https://www.apache.org/licenses/LICENSE-2.0"));
+    @Data
+    @Component
+    @ConfigurationProperties(prefix = "app.openapi")
+    public static class OpenApiSettings {
+        private String title = "Logistics Orchestration Engine";
+        private String description = "High-throughput logistics backbone providing real-time routing and agency management.";
+        private String version = "v2.5.0-beta";
+        private String contactEmail = "engineering@bytesmind.tech";
+        private String issuerUri = "http://localhost:8081";
+        private List<ServerInfo> servers = new ArrayList<>();
+
+        @Data
+        public static class ServerInfo {
+            private String url;
+            private String description;
+        }
     }
 }

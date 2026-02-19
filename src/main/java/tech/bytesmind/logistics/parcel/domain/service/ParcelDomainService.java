@@ -48,9 +48,8 @@ public class ParcelDomainService {
             case IN_SORTING -> to == ParcelStatus.IN_TRANSIT || to == ParcelStatus.OUT_FOR_DELIVERY;
             case OUT_FOR_DELIVERY -> to == ParcelStatus.DELIVERED || to == ParcelStatus.FAILED ||
                     to == ParcelStatus.IN_TRANSIT;
-            case DELIVERED -> false; // État terminal
+            case DELIVERED, RETURNED -> false;
             case FAILED -> to == ParcelStatus.RETURNED || to == ParcelStatus.IN_TRANSIT;
-            case RETURNED -> false; // État terminal
         };
 
         if (!isValid) {
@@ -98,15 +97,6 @@ public class ParcelDomainService {
     }
 
     /**
-     * Génère un numéro de tracking unique.
-     */
-    public String generateTrackingNumber(String agencyCode) {
-        String timestamp = String.valueOf(System.currentTimeMillis());
-        String random = String.valueOf((int) (Math.random() * 100000));
-        return String.format("TRK-%s-%s-%s", agencyCode, timestamp, random);
-    }
-
-    /**
      * Marque un Parcel comme livré.
      */
     public void markAsDelivered(Parcel parcel, String receivedBy) {
@@ -117,6 +107,15 @@ public class ParcelDomainService {
         parcel.setStatus(ParcelStatus.DELIVERED);
         parcel.setDeliveredAt(Instant.now());
         parcel.setLastScanAt(Instant.now());
+
+        if (receivedBy != null && !receivedBy.isBlank()) {
+            String note = "Delivered to: " + receivedBy;
+            if (parcel.getNotes() == null || parcel.getNotes().isBlank()) {
+                parcel.setNotes(note);
+            } else {
+                parcel.setNotes(parcel.getNotes() + "\n" + note);
+            }
+        }
     }
 
     /**
