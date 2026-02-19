@@ -118,6 +118,20 @@ public class GlobalExceptionHandler {
     }
 
     // =========================================================================
+    // PDF generation
+    // =========================================================================
+
+    @ExceptionHandler(PdfGenerationException.class)
+    public ProblemDetail handlePdfGenerationException(PdfGenerationException ex) {
+        log.error("PDF generation failed: {}", ex.getMessage(), ex.getCause());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.INTERNAL_SERVER_ERROR, "PDF could not be generated. Please try again.");
+        problem.setTitle("PDF Generation Error");
+        problem.setType(INTERNAL_ERROR_TYPE);
+        return problem;
+    }
+
+    // =========================================================================
     // Fallback
     // =========================================================================
 

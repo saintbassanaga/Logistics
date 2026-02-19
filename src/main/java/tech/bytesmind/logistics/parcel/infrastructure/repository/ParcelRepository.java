@@ -49,4 +49,10 @@ public interface ParcelRepository extends JpaRepository<Parcel, UUID> {
 
     @Query("SELECT p FROM Parcel p WHERE p.agencyId = :agencyId AND p.status = 'DELIVERED' AND p.deliveredAt >= CURRENT_DATE")
     List<Parcel> findTodayDeliveriesByAgency(@Param("agencyId") UUID agencyId);
+
+    @Query("SELECT p FROM Parcel p JOIN FETCH p.shipment WHERE p.id = :id")
+    Optional<Parcel> findByIdWithShipment(@Param("id") UUID id);
+
+    @Query("SELECT p FROM Parcel p JOIN FETCH p.shipment WHERE p.id = :id AND p.agencyId = :agencyId")
+    Optional<Parcel> findByIdAndAgencyIdWithShipment(@Param("id") UUID id, @Param("agencyId") UUID agencyId);
 }
