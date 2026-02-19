@@ -1,7 +1,6 @@
 package tech.bytesmind.logistics.parcel.application.service.impls;
 
 import com.lowagie.text.*;
-import com.lowagie.text.Font;
 import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
@@ -35,6 +34,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.List;
 
 import static tech.bytesmind.logistics.parcel.application.service.impls.PdfComponents.*;
 
@@ -236,8 +236,8 @@ public class ReceiptServiceImpl implements ReceiptService {
             right.add(new Chunk(date, SMALL_WHITE));
         }
 
-        table.addCell(compositeCell(left,  HEADER_BG, Element.ALIGN_LEFT,  14));
-        table.addCell(compositeCell(right, HEADER_BG, Element.ALIGN_RIGHT, 14));
+        table.addCell(compositeCell(left, Element.ALIGN_LEFT,  14));
+        table.addCell(compositeCell(right, Element.ALIGN_RIGHT, 14));
         return table;
     }
 
@@ -386,8 +386,8 @@ public class ReceiptServiceImpl implements ReceiptService {
         Paragraph name  = new Paragraph(agency.getName(), TITLE);
         Paragraph title = new Paragraph("PARCEL LABEL", HEADER);
         title.setAlignment(Element.ALIGN_RIGHT);
-        table.addCell(compositeCell(name,  HEADER_BG, Element.ALIGN_LEFT,  10));
-        table.addCell(compositeCell(title, HEADER_BG, Element.ALIGN_RIGHT, 10));
+        table.addCell(compositeCell(name, Element.ALIGN_LEFT,  10));
+        table.addCell(compositeCell(title, Element.ALIGN_RIGHT, 10));
         return table;
     }
 
@@ -524,11 +524,11 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
     /** Wraps a Paragraph into a dark/colored PdfPCell. */
-    private PdfPCell compositeCell(Paragraph content, java.awt.Color bg, int align, int padding) {
+    private PdfPCell compositeCell(Paragraph content, int align, int padding) {
         content.setAlignment(align);
         PdfPCell cell = new PdfPCell();
         cell.addElement(content);
-        cell.setBackgroundColor(bg);
+        cell.setBackgroundColor(PdfComponents.HEADER_BG);
         cell.setHorizontalAlignment(align);
         cell.setPadding(padding);
         cell.setBorder(Rectangle.NO_BORDER);
