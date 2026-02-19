@@ -40,8 +40,6 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${APP_ISSUER_URI:http://localhost:8081}
-          # jwk-set-uri is NOT needed — JwtDecoder is provided directly from the
-          # in-memory JWKSource bean, avoiding the chicken-and-egg startup issue.
 
   web:
     error:
