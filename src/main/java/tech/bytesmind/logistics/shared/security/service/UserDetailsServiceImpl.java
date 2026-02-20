@@ -2,6 +2,7 @@ package tech.bytesmind.logistics.shared.security.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -42,6 +43,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
+    @NullMarked
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
         User user = userRepository.findByEmailOrUsernameWithRoles(identifier)
@@ -72,5 +74,21 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .filter(Role::isActive)
                 .map(r -> new SimpleGrantedAuthority("ROLE_" + r.getCode().toUpperCase()))
                 .collect(Collectors.toUnmodifiableSet());
+    }
+
+    public record CustomUserDetails(
+            User user,
+            Collection<? extends GrantedAuthority> authorities
+    ) implements UserDetails {
+
+        @NullMarked
+        @Override public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }
+        @Override public String getPassword() { return user.getPasswordHash(); }
+        @NullMarked
+        @Override public String getUsername() { return user.getId().toString(); } // sub
+        @Override public boolean isEnabled() { return user.isActive(); }
+        @Override public boolean isAccountNonLocked() { return user.isEmailVerified(); }
+        @Override public boolean isAccountNonExpired() { return true; }
+        @Override public boolean isCredentialsNonExpired() { return true; }
     }
 }
